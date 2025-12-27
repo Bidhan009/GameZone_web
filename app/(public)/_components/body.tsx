@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 
 const products = [
-  { id: 1, name: "Gaming Mouse", price: "$59.99", category: "Game", image: "" },
+  { id: 1, name: "Gaming Mouse", price: "$59.99", category: "Game", image: "/images/GamingMouse.png" },
   { id: 2, name: "Gaming Pc", price: "$69.99", category: "Accessory", image: "/images/GamingPc.png" },
   { id: 3, name: "PS5", price: "$999.00", category: "Hardware", image: "/images/ps5.png" },
   { id: 4, name: "Xbox Controller", price: "$129.99", category: "Gear", image: "/images/xboxController.png" },
