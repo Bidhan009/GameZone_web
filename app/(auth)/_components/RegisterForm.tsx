@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RegisterData, registerSchema } from "../schema";
-import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck, Phone } from "lucide-react";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -18,23 +18,37 @@ export default function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
-    mode: "onBlur",
+    mode: "onSubmit",
   });
 
   const isLoading = isSubmitting || isPending;
 
   const onSubmit = async (values: RegisterData) => {
-    startTransition(async () => {
-      try {
-        // Simulate registration process
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log("Account created:", values);
-        router.push("/login"); // Directing to your signin page
-      } catch (error) {
-        console.error("Registration failed", error);
-      }
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // 🔑 allow sending cookies
+      body: JSON.stringify(values),
     });
-  };
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Registration failed:", data.message);
+      alert(data.message || "Registration failed");
+      return;
+    }
+
+    console.log("User created in MongoDB:", data);
+    router.push("/login");
+  } catch (error) {
+    console.error("Registration error:", error);
+    alert("Server error. Check backend console.");
+  }
+};
+
+
 
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-[#1a1f29] border border-gray-800 rounded-2xl shadow-2xl backdrop-blur-sm">
@@ -52,13 +66,13 @@ export default function RegisterForm() {
           <div className="relative group">
             <User className="absolute left-3 top-3 w-5 h-5 text-gray-500 group-focus-within:text-purple-500 transition-colors" />
             <input
-              id="name"
-              {...register("name")}
+              id="fullName"
+              {...register("fullName")}
               placeholder="Master Chief"
-              className={`w-full bg-[#0f1218] border ${errors.name ? "border-red-500" : "border-gray-700"} rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-purple-500 transition-all`}
+              className={`w-full bg-[#0f1218] border ${errors.fullName ? "border-red-500" : "border-gray-700"} rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-purple-500 transition-all`}
             />
           </div>
-          {errors.name && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.name.message}</p>}
+          {errors.fullName && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.fullName.message}</p>}
         </div>
 
         {/* Email */}
@@ -75,6 +89,22 @@ export default function RegisterForm() {
             />
           </div>
           {errors.email && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.email.message}</p>}
+        </div>
+
+        {/* Phone Number (NEW) */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase text-gray-500 ml-1" htmlFor="phone">Phone Number</label>
+          <div className="relative group">
+            <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-500 group-focus-within:text-purple-500 transition-colors" />
+            <input
+              id="phone"
+              type="tel"
+              {...register("phone")}
+              placeholder="+1 234 567 890"
+              className={`w-full bg-[#0f1218] border ${errors.phone ? "border-red-500" : "border-gray-700"} rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-purple-500 transition-all`}
+            />
+          </div>
+          {errors.phone && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.phone.message}</p>}
         </div>
 
         {/* Password */}
@@ -128,7 +158,7 @@ export default function RegisterForm() {
 
         <div className="mt-6 text-center text-sm text-gray-400">
           Already have an account?{" "}
-          <Link href="/signin" className="text-purple-500 font-bold hover:underline">
+          <Link href="/login" className="text-purple-500 font-bold hover:underline">
             Log in
           </Link>
         </div>
