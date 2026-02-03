@@ -33,7 +33,7 @@ export default function Sidebar() {
           <div className="leading-tight">
             <p className="text-sm font-bold">Admin Panel</p>
             <p className="text-[11px] text-muted-foreground">
-              RentEase Control
+              GameZone Control
             </p>
           </div>
         </Link>

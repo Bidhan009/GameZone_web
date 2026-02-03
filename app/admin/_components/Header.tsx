@@ -27,7 +27,7 @@ export default function Header() {
                   Admin Panel
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  RentEase Management
+                  GameZone Management
                 </p>
               </div>
             </Link>
