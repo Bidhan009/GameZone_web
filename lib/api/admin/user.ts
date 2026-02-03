@@ -1,6 +1,7 @@
 // src/lib/api/admin/user.ts
 import { API } from "../endpoints";
 import axios from "../axios";
+import { ApiResponse } from "../auth";
 // import { userBox } from "@/lib/hive/boxes"; // Ensure this path is correct
 
 export const createUser = async (userData: FormData) => {
@@ -11,7 +12,7 @@ export const createUser = async (userData: FormData) => {
             { headers: { 'Content-Type': 'multipart/form-data' } }
         );
 
-        const result = response.data;
+        const result = response.data as ApiResponse;
 
         if (result.success && result.data) {
             // --- CRITICAL HIVE SYNC ---
