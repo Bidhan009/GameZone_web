@@ -1,19 +1,11 @@
 "use server";
 
 import { login, register } from "@/lib/api/auth";
+import type { ApiResponse } from "@/lib/api/auth";
 import { LoginData, RegisterData } from "@/app/(auth)/schema";
 import { setAuthToken, setUserData, clearAuthCookies } from "../cookie";
 import { redirect } from "next/navigation";
 
-/** * Interface for the Backend API Response.
- * This ensures TypeScript knows what 'response.success' and 'response.data' are.
- */
-interface ApiResponse<T = any> {
-    success: boolean;
-    message?: string;
-    token?: string;
-    data?: T;
-}
 
 export const handleRegister = async (data: RegisterData): Promise<ApiResponse> => {
     try {
@@ -32,10 +24,11 @@ export const handleRegister = async (data: RegisterData): Promise<ApiResponse> =
             success: false,
             message: response.message || 'Registration failed'
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Registration action failed';
         return { 
             success: false, 
-            message: error.message || 'Registration action failed' 
+            message: errorMessage
         };
     }
 };
@@ -60,10 +53,11 @@ export const handleLogin = async (data: LoginData): Promise<ApiResponse> => {
             success: false,
             message: response.message || 'Login failed'
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Login action failed';
         return { 
             success: false, 
-            message: error.message || 'Login action failed' 
+            message: errorMessage
         };
     }
 };
