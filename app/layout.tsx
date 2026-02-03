@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "./(public)/_components/Header";
-import Footer from "./(public)/_components/footer";
+// Import your AuthProvider
+import { AuthProvider } from "@/app/context/AuthContext"; 
 
 // Configure the Inter font
 const inter = Inter({ subsets: ["latin"] });
 
-// SEO Metadata
 export const metadata: Metadata = {
   title: "GameZone | The Ultimate Gaming Store",
   description: "Shop the latest games, high-performance hardware, and gaming accessories.",
@@ -24,10 +23,12 @@ export default function RootLayout({
       <body
         className={`${inter.className} bg-[#0f1218] text-white antialiased min-h-screen flex flex-col`}
       >
-        <main className="flex-grow">
-          {children}
-        </main>
-
+        {/* Wrap children with AuthProvider so Header and Pages can use useAuth */}
+        <AuthProvider>
+          <main className="flex-grow">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
