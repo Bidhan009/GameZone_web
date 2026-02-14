@@ -102,31 +102,31 @@ export async function handleUpdateProfile(profileData: FormData) {
     }
 }
 
-export const handleRequestPasswordReset = async (email: string) => {
+export async function handleRequestPasswordReset (email: string){
     try {
-        const response = await requestPasswordReset(email);
-        if (response.success) {
+        const result = await requestPasswordReset(email);
+        if (result.success) {
             return {
                 success: true,
                 message: 'Password reset email sent successfully'
             }
         }
-        return { success: false, message: response.message || 'Request password reset failed' }
+        return { success: false, message: result.message || 'Request password reset failed' }
     } catch (error: Error | any) {
         return { success: false, message: error.message || 'Request password reset action failed' }
     }
 };
 
-export const handleResetPassword = async (token: string, newPassword: string) => {
+export async function handleResetPassword (token: string, newPassword: string) {
     try {
-        const response = await resetPassword(token, newPassword);
-        if (response.success) {
+        const result = await resetPassword(token, newPassword);
+        if (result.success) {
             return {
                 success: true,
                 message: 'Password has been reset successfully'
             }
         }
-        return { success: false, message: response.message || 'Reset password failed' }
+        return { success: false, message: result.message || 'Reset password failed' }
     } catch (error: Error | any) {
         return { success: false, message: error.message || 'Reset password action failed' }
     }

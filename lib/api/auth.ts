@@ -62,19 +62,19 @@ export const updateProfile = async (profileData: FormData): Promise<ApiResponse>
     }
 }
 
-export const requestPasswordReset = async (email: string) => {
+export const requestPasswordReset = async (email: string) : Promise<ApiResponse> => {
     try {
         const response = await axios.post(API.AUTH.REQUEST_PASSWORD_RESET, { email });
-        return response.data;
+        return response.data as ApiResponse;
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message || error.message || 'Request password reset failed');
     }
 };
 
-export const resetPassword = async (token: string, newPassword: string) => {
+export const resetPassword = async (token: string, newPassword: string) : Promise<ApiResponse> => {
     try {
         const response = await axios.post(API.AUTH.RESET_PASSWORD(token), { newPassword: newPassword });
-        return response.data;
+        return response.data as ApiResponse;
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message || error.message || 'Reset password failed');
     }
