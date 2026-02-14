@@ -8,6 +8,10 @@ export const API = {
         REQUEST_PASSWORD_RESET: '/api/auth/request-password-reset',
         RESET_PASSWORD: (token: string) => `/api/auth/reset-password/${token}`,
     },
+    PRODUCT: {
+        CREATE: '/api/products',
+        GET_ALL: '/api/products',
+    },
     ADMIN: {
         USER: {
             CREATE: '/api/admin/users/',

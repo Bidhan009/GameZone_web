@@ -1,34 +1,32 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { ProductData } from "@/app/admin/products/schema";
+import { createProduct } from "@/lib/api/product";
 
-export async function handleCreateProduct(formData: FormData) {
+export async function handleCreateProduct(formData: FormData): Promise<{ success: boolean; message?: string }> {
+  // 1. Validate data again on server (Security)
+  // 2. Save to your DB (MongoDB/Postgres/etc.)
+  
   try {
-    const file = formData.get("productImage") as File;
-    const name = formData.get("name") as string;
-    const price = formData.get("price") as string;
-    // ... get other fields
-
-    if (!file || file.size === 0) {
-      throw new Error("Please upload a game cover image.");
-    }
-
-    // 1. Convert the file to a Buffer so Node.js can handle it
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // 2. TODO: Upload to Cloudinary/S3 here
-    // For now, let's pretend we uploaded it and got a URL back
-    const imageUrl = "https://placeholder-link.com/game-cover.jpg"; 
-
-    console.log(`Uploading ${name} with image size: ${buffer.length} bytes`);
-
-    // 3. Save to your Database (MongoDB/Hive/etc.)
-    // db.products.create({ name, price, imageUrl, ... })
-
-    revalidatePath("/admin/products");
-    return { success: true };
+    // Extract data from FormData for logging
+    const name = formData.get('name') as string;
+    const price = parseFloat(formData.get('price') as string);
+    const category = formData.get('category') as string;
+    const stock = parseInt(formData.get('stock') as string);
+    const description = formData.get('description') as string;
+    const productImage = formData.get('productImage') as File;
+    
+    console.log("Server received:", { name, price, category, stock, description, productImage });
+    
+    // Call the actual API to create product
+    const response = await createProduct(formData);
+    
+    return response as { success: boolean; message?: string };
   } catch (error: any) {
-    return { success: false, message: error.message || "Failed to create product" };
+    console.error("Create product error:", error);
+    return { 
+      success: false, 
+      message: error.response?.data?.message || error.message || 'Create product failed'
+    };
   }
 }

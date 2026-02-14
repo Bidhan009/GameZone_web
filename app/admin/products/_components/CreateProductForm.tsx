@@ -91,7 +91,7 @@ export default function CreateProductForm() {
         ) : (
           <div className="text-center">
             <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">Upload Game Cover</p>
+            <p className="text-sm text-muted-foreground">Upload Product Photo</p>
           </div>
         )}
 
@@ -116,7 +116,7 @@ export default function CreateProductForm() {
 
       {/* Game Title */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold flex items-center gap-2"><Gamepad2 className="h-4 w-4" /> Game Title</label>
+        <label className="text-sm font-semibold flex items-center gap-2"><Gamepad2 className="h-4 w-4" /> Product Title</label>
         <input {...register("name")} placeholder="e.g. God of War Ragnarok" className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
         {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
       </div>
@@ -138,9 +138,9 @@ export default function CreateProductForm() {
         <label className="text-sm font-semibold flex items-center gap-2"><Layers className="h-4 w-4" /> Category</label>
         <select {...register("category")} className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
           <option value="">Select Category</option>
-          <option value="Action">Action</option>
-          <option value="RPG">RPG</option>
-          <option value="Simulation">Simulation</option>
+          <option value="Game">Game</option>
+          <option value="Accessories">Accessories</option>
+          <option value="Gifts">Gifts</option>
         </select>
       </div>
 
