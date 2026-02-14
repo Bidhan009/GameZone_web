@@ -3,24 +3,32 @@ import Sidebar from "./_components/Sidebar";
 import { AuthProvider } from "@/context/AuthContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    return (
-        <AuthProvider>
-            <div className='flex w-full min-h-screen'>
-                <div className='page-wrapper flex w-full'>
-                    {/* Header/sidebar */}
-                    <div className='xl:block hidden'>
-                        <Sidebar />
-                    </div>
-                    <div className='w-full bg-background'>
-                        {/* Top Header  */}
-                        <Header />
-                        {/* Body Content  */}
-                        <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 p-2">
-                            {children}
-                        </main>
-                    </div>
-                </div>
+  return (
+    <AuthProvider>
+      {/* 1. Main wrapper: holds everything in a row */}
+      <div className="flex min-h-screen w-full bg-background">
+        
+        {/* 2. Sidebar: Fixed width column */}
+        {/* Hidden on small screens, visible on md and up */}
+        <div className="hidden md:block w-64 flex-shrink-0 border-r border-border">
+          <Sidebar />
+        </div>
+
+        {/* 3. Content Area: Vertical stack of Header + Main */}
+        <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
+          
+          {/* Top Header: Stays at the top of the content area */}
+          <Header />
+
+          {/* 4. Scrollable Body Content */}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+              {children}
             </div>
-        </AuthProvider>
-    );
+          </main>
+          
+        </div>
+      </div>
+    </AuthProvider>
+  );
 }
