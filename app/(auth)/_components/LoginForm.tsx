@@ -50,7 +50,7 @@ export default function LoginForm() {
         if (role === "admin") {
           router.push("/admin");
         } else if (role === "user") {
-          router.push("/dashboard");
+          router.push("/user/dashboard");
         } else {
           router.push("/");
         }

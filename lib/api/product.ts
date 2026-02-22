@@ -15,30 +15,56 @@ export const createProduct = async (formData: FormData) => {
             price: priceStr, 
             stock: stockStr,
             priceType: typeof priceStr,
-            stockType: typeof stockStr
+            stockType: typeof stockStr,
+            productImage: productImage,
+            productImageType: typeof productImage,
+            productImageName: productImage?.name,
+            productImageSize: productImage?.size
         });
 
-        // Convert and format properly
+        // Convert to actual numbers
         const priceNum = parseFloat(priceStr);
         const stockNum = parseInt(stockStr);
         
-        // Create properly formatted strings
-        const formattedPrice = isNaN(priceNum) ? "0" : priceNum.toFixed(2);
-        const formattedStock = isNaN(stockNum) ? "0" : stockNum.toString();
-        
-        // Replace FormData values
-        formData.set('price', formattedPrice);
-        formData.set('stock', formattedStock);
+        console.log("Converted numbers:", { 
+            price: priceNum, 
+            stock: stockNum,
+            priceType: typeof priceNum,
+            stockType: typeof stockNum
+        });
 
-        console.log("Formatted FormData:", { 
-            price: formData.get('price'), 
-            stock: formData.get('stock'),
-            priceType: typeof formData.get('price'),
-            stockType: typeof formData.get('stock')
+        // Always use FormData for consistency (backend expects FormData for file uploads)
+        const newFormData = new FormData();
+        newFormData.append('name', name);
+        newFormData.append('price', priceNum.toString());
+        newFormData.append('category', category);
+        newFormData.append('stock', stockNum.toString());
+        newFormData.append('description', description);
+
+        // Add file if it exists and is valid
+        if (productImage && productImage instanceof File && productImage.size > 0) {
+            newFormData.append('productImage', productImage);
+            console.log("Adding file to FormData:", productImage.name);
+        } else {
+            console.log("No valid file found, sending without image");
+        }
+
+        console.log("Final FormData being sent:", { 
+            name: newFormData.get('name'), 
+            price: newFormData.get('price'), 
+            stock: newFormData.get('stock'),
+            hasFile: newFormData.has('productImage'),
+            fileName: (newFormData.get('productImage') as File)?.name
         });
         
-        // Do NOT set Content-Type manually for FormData with axios, it kills the boundary
-        const response = await axios.post(API.PRODUCT.CREATE, formData);
+        // Always send as FormData - backend multer middleware will handle it
+        const response = await axios.post(API.PRODUCT.CREATE, newFormData, {
+            headers: {
+                // Don't set Content-Type - let axios set it automatically for FormData
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        
         return response.data;
     } catch (error: any) {
         throw new Error(error.response?.data?.message || error.message || 'Create product failed');
@@ -48,9 +74,19 @@ export const createProduct = async (formData: FormData) => {
 export const getProducts = async () => {
     try {
         const response = await axios.get(API.PRODUCT.GET_ALL);
-        // The backend returns { success: true, data: [...] }
-        return (response.data as any).data;
+        const result = response.data as any;
+        
+        // Add base URL to image paths if they exist
+        if (result.success && result.data) {
+            result.data = result.data.map((product: any) => ({
+                ...product,
+                imageUrl: product.imageUrl ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${product.imageUrl}` : null,
+                fullImageUrl: product.imageUrl ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${product.imageUrl}` : null
+            }));
+        }
+        
+        return result.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || error.message || 'Get products failed');
+        throw new Error(error.response?.data?.message || 'Get products failed');
     }
 }

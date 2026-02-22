@@ -18,8 +18,28 @@ export async function handleCreateProduct(formData: FormData): Promise<{ success
     
     console.log("Server received:", { name, price, category, stock, description, productImage });
     
+    // Create new FormData with properly parsed values
+    const newFormData = new FormData();
+    newFormData.append('name', name);
+    newFormData.append('price', price.toString()); // Send as string but backend will parse as number
+    newFormData.append('category', category);
+    newFormData.append('stock', stock.toString()); // Send as string but backend will parse as number
+    newFormData.append('description', description);
+    
+    if (productImage) {
+      newFormData.append('productImage', productImage);
+    }
+    
+    console.log("Sending to API:", { 
+      name: newFormData.get('name'), 
+      price: newFormData.get('price'), 
+      stock: newFormData.get('stock'),
+      priceType: typeof newFormData.get('price'),
+      stockType: typeof newFormData.get('stock')
+    });
+    
     // Call the actual API to create product
-    const response = await createProduct(formData);
+    const response = await createProduct(newFormData);
     
     return response as { success: boolean; message?: string };
   } catch (error: any) {

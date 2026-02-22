@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-// Import your AuthProvider
-import { AuthProvider } from "@/app/context/AuthContext"; 
+import { Providers } from "./providers"; // import the wrapper
 
-// Configure the Inter font
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -23,12 +21,11 @@ export default function RootLayout({
       <body
         className={`${inter.className} bg-[#0f1218] text-white antialiased min-h-screen flex flex-col`}
       >
-        {/* Wrap children with AuthProvider so Header and Pages can use useAuth */}
-        <AuthProvider>
+        <Providers>
           <main className="flex-grow">
             {children}
           </main>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );
