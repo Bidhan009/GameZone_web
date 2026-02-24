@@ -79,3 +79,12 @@ export const resetPassword = async (token: string, newPassword: string) : Promis
         throw new Error(error.response?.data?.message || error.message || 'Reset password failed');
     }
 }
+
+export const logout = async (): Promise<ApiResponse> => {
+    try {
+        const response = await axios.post(API.AUTH.LOGOUT);
+        return response.data as ApiResponse;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'Logout failed');
+    }
+}

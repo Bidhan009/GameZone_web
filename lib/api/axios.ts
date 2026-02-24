@@ -11,16 +11,16 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use(
-    async(config)=> {
+    async (config) =>{
         const token = await getAuthToken();
         if(token){
-            config.headers["Authorization"]= `Bearer ${token}`;
+            config.headers["Authorization"] = `Bearer ${token}`;
         }
-        return config;
+        return config; 
     },
-    (error)=> {
+    (error) =>{
         return Promise.reject(error);
     }
-);
+)
 
 export default axiosInstance;

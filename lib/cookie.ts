@@ -40,3 +40,4 @@ export const clearAuthCookies = async () => {
     cookieStore.delete('auth_token');
     cookieStore.delete('user_data');
 }
+

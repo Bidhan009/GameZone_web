@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getProducts } from "@/lib/api/product";
+import { getProducts, deleteProduct } from "@/lib/api/product";
 import { toast } from "react-toastify";
 import { 
   ShoppingCart, 
@@ -63,15 +63,16 @@ export default function ProductsPage() {
     const handleDeleteProduct = async (productId: string) => {
         if (window.confirm("Are you sure you want to delete this product?")) {
             try {
-                // TODO: Implement delete product API call
-                console.log("Delete product:", productId);
-                toast.success("Product deleted successfully");
-                // Refresh products list
-                const updatedProducts = await getProducts();
-                setProducts(updatedProducts);
-            } catch (error) {
+                const response = await deleteProduct(productId);
+                if (response.success) {
+                    toast.success("Product deleted successfully");
+                    setProducts(products.filter(p => p._id !== productId));
+                } else {
+                    toast.error(response.message || "Failed to delete product");
+                }
+            } catch (error: any) {
                 console.error("Delete Error:", error);
-                toast.error("Failed to delete product");
+                toast.error(error.message || "Failed to delete product");
             }
         }
     };

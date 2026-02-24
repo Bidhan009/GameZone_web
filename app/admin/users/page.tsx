@@ -13,7 +13,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { getUsers } from "@/lib/api/admin/user";
+import { getUsers, deleteUser } from "@/lib/api/admin/user";
 import { 
   User, 
   Edit, 
@@ -67,8 +67,21 @@ export default function UsersPage(){
 
     const filteredUsers = users;
 
-    const handleDeleteUser = (id: string) => {
-      console.log("Delete user:", id);
+    const handleDeleteUser = async (id: string) => {
+      if (window.confirm("Are you sure you want to delete this user?")) {
+        try {
+          const response = await deleteUser(id);
+          if (response.success) {
+            toast.success("User deleted successfully");
+            setUsers(users.filter(user => user._id !== id));
+          } else {
+            toast.error(response.message || "Failed to delete user");
+          }
+        } catch (error: any) {
+          console.error("Delete Error:", error);
+          toast.error(error.message || "Failed to delete user");
+        }
+      }
     };
 
     return (

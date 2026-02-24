@@ -90,3 +90,54 @@ export const getProducts = async () => {
         throw new Error(error.response?.data?.message || 'Get products failed');
     }
 }
+
+export const getProductById = async (id: string): Promise<any> => {
+    try {
+        const response = await axios.get(API.ADMIN.PRODUCT.GET_ONE(id));
+        const result = response.data as any;
+        
+        if (result.success && result.data) {
+            return {
+                ...result.data,
+                imageUrl: result.data.imageUrl ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${result.data.imageUrl}` : null,
+                fullImageUrl: result.data.imageUrl ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${result.data.imageUrl}` : null
+            };
+        }
+        throw new Error(result.message || 'Product not found');
+    } catch (error: any) {
+        console.error('Get product by ID error:', error);
+        throw new Error(error.response?.data?.message || 'Get product failed');
+    }
+}
+
+export const updateProduct = async (id: string, formData: FormData): Promise<any> => {
+    try {
+        const response = await axios.put(API.ADMIN.PRODUCT.UPDATE(id), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        const result = response.data as any;
+        
+        if (result.success) {
+            return result;
+        }
+        throw new Error(result.message || 'Update failed');
+    } catch (error: any) {
+        console.error('Update product error:', error);
+        throw new Error(error.response?.data?.message || 'Update product failed');
+    }
+}
+
+export const deleteProduct = async (id: string): Promise<any> => {
+    try {
+        const response = await axios.delete(API.ADMIN.PRODUCT.DELETE(id));
+        const result = response.data as any;
+        
+        if (result.success) {
+            return result;
+        }
+        throw new Error(result.message || 'Delete failed');
+    } catch (error: any) {
+        console.error('Delete product error:', error);
+        throw new Error(error.response?.data?.message || 'Delete product failed');
+    }
+}
