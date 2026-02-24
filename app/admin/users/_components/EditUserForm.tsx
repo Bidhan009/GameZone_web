@@ -34,6 +34,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const [previewImage, setPreviewImage] = useState<string | null>(user.profileImage || null);
+    const [imageRemoved, setImageRemoved] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const {
@@ -65,6 +66,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
 
     const handleDismissImage = (onChange?: (file: File | undefined) => void) => {
         setPreviewImage(null);
+        setImageRemoved(true);
         onChange?.(undefined);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -73,31 +75,38 @@ export default function EditUserForm({ user }: EditUserFormProps) {
 
     const onSubmit = async (data: EditUserFormData) => {
         startTransition(async () => {
-            try {
-                const formData = new FormData();
-                
-                if (data.fullName) formData.append("fullName", data.fullName);
-                if (data.email) formData.append("email", data.email);
-                if (data.phone) formData.append("phone", data.phone);
-
-                if (data.profileImage) {
-                    formData.append("profileImage", data.profileImage);
-                }
-
-                const response = await handleUpdateUser(formData, user._id);
-
-                if (!response.success) {
-                    throw new Error(response.message || "Update failed");
-                }
-                
-                toast.success("User updated successfully");
-                router.push(`/admin/users/${user._id}`);
-            } catch (err: any) {
-                const message = err.message || "Update failed";
-                toast.error(message);
+        try {
+            const formData = new FormData();
+            
+            if (data.fullName) formData.append("fullName", data.fullName);
+            if (data.email) formData.append("email", data.email);
+            if (data.phone) formData.append("phone", data.phone);
+            // Handle profile image cases:
+            // 1. New image uploaded -> append the file
+            // 2. Image explicitly removed -> append a flag to remove it
+            // 3. Nothing changed -> don't include profileImage at all (backend keeps existing)
+            
+            if (data.profileImage) {
+                // User uploaded a new image
+                formData.append("profileImage", data.profileImage);
+            } else if (imageRemoved) {
+                // User explicitly clicked X to remove the image
+                formData.append("removeProfileImage", "true");
             }
-        });
-    };
+            // If neither condition is true, don't include profileImage at all
+            const response = await handleUpdateUser(formData, user._id);
+            if (!response.success) {
+                throw new Error(response.message || "Update failed");
+            }
+            
+            toast.success("User updated successfully");
+            router.push(`/admin/users/${user._id}`);
+        } catch (err: any) {
+            const message = err.message || "Update failed";
+            toast.error(message);
+        }
+    });
+};
 
     return (
         <form
