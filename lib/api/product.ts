@@ -91,9 +91,32 @@ export const getProducts = async () => {
     }
 }
 
+export const getProductsPaginated = async (page: number = 1, limit: number = 10) => {
+    try {
+        const response = await axios.get(`${API.PRODUCT.GET_ALL}?page=${page}&limit=${limit}`);
+        const result = response.data as any;
+        
+        if (result.success) {
+            return {
+                products: result.data.map((product: any) => ({
+                    ...product,
+                    imageUrl: product.imageUrl ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${product.imageUrl}` : null,
+                    fullImageUrl: product.imageUrl ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}${product.imageUrl}` : null
+                })),
+                total: result.total,
+                page: result.page,
+                totalPages: result.totalPages
+            };
+        }
+        throw new Error(result.message || 'Get products failed');
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Get products failed');
+    }
+}
+
 export const getProductById = async (id: string): Promise<any> => {
     try {
-        const response = await axios.get(API.ADMIN.PRODUCT.GET_ONE(id));
+        const response = await axios.get(API.PRODUCT.GET_ONE(id));
         const result = response.data as any;
         
         if (result.success && result.data) {

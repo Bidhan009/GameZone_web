@@ -1,16 +1,20 @@
-import { ShoppingCart, Filter, Flame, ChevronRight } from "lucide-react";
+import { getProductsPaginated } from "@/lib/api/product";
+import Link from "next/link";
+import { ShoppingCart, Filter, Flame, ChevronRight, Package } from "lucide-react";
 
-// Mock data - In Clean Architecture, this would come from your UseCase/Hive
-const PRODUCTS = [
-  { id: 1, name: "DualSense Edge Wireless", category: "Accessories", price: "$199.99", image: "🎮", tag: "Best Seller" },
-  { id: 2, name: "Elden Ring: Shadow of Erdtree", category: "Games", price: "$39.99", image: "💿", tag: "New" },
-  { id: 3, name: "Razer BlackShark V2 Pro", category: "Gear", price: "$179.00", image: "🎧", tag: "Popular" },
-  { id: 4, name: "Xbox Series X", category: "Consoles", price: "$499.99", image: "📦", tag: "In Stock" },
-  { id: 5, name: "Cyberpunk 2077 Ultimate", category: "Games", price: "$59.99", image: "💿", tag: "Sale" },
-  { id: 6, name: "Logitech G Pro X Superlight", category: "Gear", price: "$149.00", image: "🖱️", tag: "Pro Choice" },
-];
+export default async function DashboardPage() {
+  let productsData;
+  let errorMessage = null;
 
-export default function DashboardPage() {
+  try {
+    productsData = await getProductsPaginated(1, 6);
+  } catch (error: any) {
+    errorMessage = error.message || "Failed to load products";
+    productsData = { products: [], total: 0, page: 1, totalPages: 0 };
+  }
+
+  const { products } = productsData;
+
   return (
     <div className="space-y-8">
       {/* Promo Banner */}
@@ -23,9 +27,9 @@ export default function DashboardPage() {
             Level Up Your <br /> <span className="text-indigo-900">Battlestation</span>
           </h2>
           <p className="mt-3 text-indigo-100 text-sm">Get up to 40% off on all Razer and Logitech gear this weekend only.</p>
-          <button className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
+          <Link href="/products" className="mt-6 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
             Shop Collection
-          </button>
+          </Link>
         </div>
         {/* Background Decorative Element */}
         <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-indigo-500 opacity-20 blur-3xl"></div>
@@ -44,43 +48,79 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Error State */}
+      {errorMessage && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+          <p className="text-red-400 text-sm">{errorMessage}</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!errorMessage && products.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16">
+            <Package className="h-16 w-16 text-gray-600 mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">No Products Available</h3>
+            <p className="text-gray-500 text-sm">Check back later for new products</p>
+        </div>
+      )}
+
       {/* Product Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {PRODUCTS.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {products.length > 0 && (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {products.map((product: any) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
+      )}
 
       {/* Pagination / View All */}
       <div className="flex justify-center pt-4">
-        <button className="group flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-500 transition-colors">
+        <Link href="/products" className="group flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-500 transition-colors">
           Browse Entire Inventory <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Link>
       </div>
     </div>
   );
 }
 
 function ProductCard({ product }: { product: any }) {
+  const getTag = (stock: number) => {
+    if (stock === 0) return { label: "Out of Stock", class: "bg-red-600/10 text-red-400 border-red-500/20" };
+    if (stock < 10) return { label: "Low Stock", class: "bg-orange-600/10 text-orange-400 border-orange-500/20" };
+    return { label: "In Stock", class: "bg-green-600/10 text-green-400 border-green-500/20" };
+  };
+
+  const tag = getTag(product.stock);
+
   return (
     <div className="group relative rounded-2xl border border-gray-800 bg-[#1c212a] p-4 transition-all hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/5">
-      {/* Product Image Placeholder */}
-      <div className="relative mb-4 flex h-48 items-center justify-center rounded-xl bg-[#0f1115] text-5xl">
-        {product.image}
-        <span className="absolute left-2 top-2 rounded-lg bg-indigo-600/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-400 border border-indigo-500/20">
-          {product.tag}
-        </span>
-      </div>
+      {/* Product Image */}
+      <Link href={`/products/${product._id}`}>
+        <div className="relative mb-4 flex h-48 items-center justify-center rounded-xl bg-[#0f1115] overflow-hidden">
+          {product.imageUrl ? (
+            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          ) : (
+            <Package className="h-16 w-16 text-gray-600" />
+          )}
+          <span className={`absolute left-2 top-2 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wider border ${tag.class}`}>
+            {tag.label}
+          </span>
+        </div>
+      </Link>
 
       {/* Product Info */}
       <div className="space-y-1">
         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{product.category}</p>
-        <h4 className="font-bold text-white group-hover:text-indigo-400 transition-colors">{product.name}</h4>
+        <Link href={`/products/${product._id}`}>
+            <h4 className="font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">{product.name}</h4>
+        </Link>
         <div className="flex items-center justify-between pt-3">
-          <span className="text-lg font-black text-white">{product.price}</span>
-          <button className="rounded-lg bg-indigo-600 p-2 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all active:scale-95">
-            <ShoppingCart size={18} />
-          </button>
+          <span className="text-lg font-black text-white">${product.price?.toFixed(2)}</span>
+          <Link href={`/products/${product._id}`}>
+            <button className="rounded-lg bg-indigo-600 p-2 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all active:scale-95">
+              <ShoppingCart size={18} />
+            </button>
+          </Link>
         </div>
       </div>
     </div>

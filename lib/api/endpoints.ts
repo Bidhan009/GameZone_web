@@ -12,6 +12,7 @@ export const API = {
     PRODUCT: {
         CREATE: '/api/products',
         GET_ALL: '/api/products',
+        GET_ONE: (productId: string) => `/api/products/${productId}`,
     },
     ADMIN: {
         USER: {
