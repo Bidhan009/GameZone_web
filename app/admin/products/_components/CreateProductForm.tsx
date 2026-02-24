@@ -140,7 +140,7 @@ export default function CreateProductForm() {
           <option value="">Select Category</option>
           <option value="Game">Game</option>
           <option value="Accessories">Accessories</option>
-          <option value="Gifts">Gifts</option>
+          <option value="Console">Console</option>
         </select>
       </div>
 
