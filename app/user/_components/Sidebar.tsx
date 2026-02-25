@@ -5,6 +5,7 @@ import { Home, Heart, Package, CreditCard, User, Gamepad2, Settings } from "luci
 
 const menuItems = [
   { name: "Lobby (Home)", href: "/user/dashboard", icon: Home },
+  { name: "Products", href: "/user/products", icon: Gamepad2 },
   { name: "My Collection", href: "/user/favourites", icon: Heart },
   { name: "Order History", href: "/user/orders", icon: Package },
   { name: "Wallet & Credits", href: "/user/payment", icon: CreditCard },

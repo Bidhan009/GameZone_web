@@ -27,7 +27,7 @@ export default async function DashboardPage() {
             Level Up Your <br /> <span className="text-indigo-900">Battlestation</span>
           </h2>
           <p className="mt-3 text-indigo-100 text-sm">Get up to 40% off on all Razer and Logitech gear this weekend only.</p>
-          <Link href="/products" className="mt-6 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
+          <Link href="/user/products" className="mt-6 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
             Shop Collection
           </Link>
         </div>
@@ -75,7 +75,7 @@ export default async function DashboardPage() {
 
       {/* Pagination / View All */}
       <div className="flex justify-center pt-4">
-        <Link href="/products" className="group flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-500 transition-colors">
+        <Link href="/user/products" className="group flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-500 transition-colors">
           Browse Entire Inventory <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
@@ -95,7 +95,7 @@ function ProductCard({ product }: { product: any }) {
   return (
     <div className="group relative rounded-2xl border border-gray-800 bg-[#1c212a] p-4 transition-all hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/5">
       {/* Product Image */}
-      <Link href={`/products/${product._id}`}>
+      <Link href={`/user/products/${product._id}`}>
         <div className="relative mb-4 flex h-48 items-center justify-center rounded-xl bg-[#0f1115] overflow-hidden">
           {product.imageUrl ? (
             <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
@@ -111,12 +111,12 @@ function ProductCard({ product }: { product: any }) {
       {/* Product Info */}
       <div className="space-y-1">
         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{product.category}</p>
-        <Link href={`/products/${product._id}`}>
+        <Link href={`/user/products/${product._id}`}>
             <h4 className="font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">{product.name}</h4>
         </Link>
         <div className="flex items-center justify-between pt-3">
           <span className="text-lg font-black text-white">${product.price?.toFixed(2)}</span>
-          <Link href={`/products/${product._id}`}>
+          <Link href={`/user/products/${product._id}`}>
             <button className="rounded-lg bg-indigo-600 p-2 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all active:scale-95">
               <ShoppingCart size={18} />
             </button>
