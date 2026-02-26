@@ -1,7 +1,10 @@
 import { getProductById } from "@/lib/api/product";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ShoppingCart, Package, Check, X } from "lucide-react";
+import { ArrowLeft, Package, Check, X } from "lucide-react";
+import AddToCartButton from "./_components/AddToCartButton";
+import WishlistButton from "./_components/WishListButton";
+import ProductPurchaseSection from "./_components/ProductPurchaseSection";
 
 interface ProductDetailPageProps {
     params: Promise<{ id: string }>;
@@ -94,19 +97,16 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                         </p>
                     </div>
 
-                    <button
-                        disabled={!isInStock}
-                        className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
-                            isInStock
-                                ? "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
-                                : "bg-gray-800 text-gray-500 cursor-not-allowed"
-                        }`}
-                    >
-                        <span className="flex items-center justify-center gap-2">
-                            <ShoppingCart className="h-5 w-5" />
-                            {isInStock ? "Add to Cart" : "Out of Stock"}
-                        </span>
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <WishlistButton productId={product._id} />
+                            </div>
+
+                            <ProductPurchaseSection
+                            productId={product._id}
+                            isInStock={isInStock}
+                            stock={product.stock}
+                            price={product.price}
+                            />
                 </div>
             </div>
         </div>

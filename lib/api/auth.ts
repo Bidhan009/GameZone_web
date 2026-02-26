@@ -1,7 +1,7 @@
-import { LoginData, RegisterData } from "@/app/(auth)/schema"
-import { UserData } from "@/lib/cookie"
-import axios from "./axios"
-import { API } from "./endpoints"
+import { LoginData, RegisterData } from "@/app/(auth)/schema";
+import { UserData, getAuthToken } from "@/lib/cookie";
+import axios from "./axios";
+import { API } from "./endpoints";
 
 export interface ApiResponse<T = UserData> {
     success: boolean;
@@ -34,7 +34,15 @@ export const login = async (loginData: LoginData): Promise<ApiResponse> => {
 
 export const whoAmI = async (): Promise<ApiResponse> => {
     try {
-        const response = await axios.get(API.AUTH.WHOAMI);
+        // Use server-side auth token for this server-side call
+        const token = await getAuthToken();
+        const response = await axios.get(API.AUTH.WHOAMI, {
+            headers: token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                }
+                : undefined,
+        });
         return response.data as ApiResponse;
     }catch (error:Error | any){
         throw new Error(error.response?.data?.message
@@ -45,13 +53,19 @@ export const whoAmI = async (): Promise<ApiResponse> => {
 
 export const updateProfile = async (profileData: FormData): Promise<ApiResponse> => {
     try{
+        const token = await getAuthToken();
         const response = await axios.put(
             API.AUTH.UPDATEPROFILE,
             profileData,
             {
                 headers: {
                     'Content-Type': 'multipart/form-data',// for file upload /multer
-                }
+                    ...(token
+                        ? {
+                            Authorization: `Bearer ${token}`,
+                          }
+                        : {}),
+                },
             }
         );
         return response.data as ApiResponse;

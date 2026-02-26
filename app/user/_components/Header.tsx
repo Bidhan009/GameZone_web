@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { Search, Bell, ShoppingCart, Zap, LogOut, User } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
+import { useCart } from "@/app/context/CartContext";
 
 export default function Header() {
   const { logout, user } = useAuth();
+  const { cart } = useCart();
 
   const handleLogout = async () => {
     await logout();
@@ -40,10 +42,14 @@ export default function Header() {
         <div className="flex items-center gap-4">
           {/* Cart & Notifications */}
           <div className="hidden sm:flex items-center gap-4 mr-2">
-            <div className="relative cursor-pointer text-gray-400 hover:text-indigo-400 transition-colors">
+            <Link href="/user/cart" className="relative cursor-pointer text-gray-400 hover:text-indigo-400 transition-colors">
               <ShoppingCart size={22} />
-              <span className="absolute -top-2 -right-2 bg-indigo-600 text-[10px] font-bold px-1.5 rounded-full text-white ring-2 ring-[#0f1115]">3</span>
-            </div>
+              {cart && cart.totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-indigo-600 text-[10px] font-bold px-1.5 rounded-full text-white ring-2 ring-[#0f1115]">
+                  {cart.totalItems}
+                </span>
+              )}
+            </Link>
             <Bell className="text-gray-400 cursor-pointer hover:text-white transition-colors" size={22} />
           </div>
 
@@ -53,9 +59,15 @@ export default function Header() {
           <div className="flex items-center gap-3 bg-gray-900/50 p-1.5 pr-4 rounded-full border border-gray-800">
             <div className="h-8 w-8 rounded-full border border-indigo-500 overflow-hidden">
               <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
+                src={
+                  user?.profileImage
+                    ? (user.profileImage.startsWith("http")
+                        ? user.profileImage
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${user.profileImage}`)
+                    : "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+                }
                 alt="avatar" 
-                className="bg-gray-800"
+                className="bg-gray-800 w-full h-full object-cover"
               />
             </div>
             

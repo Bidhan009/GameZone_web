@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Heart, Package, CreditCard, User, Gamepad2, Settings } from "lucide-react";
+import { Home, Heart, Package, CreditCard, User, Gamepad2, Settings, ShoppingCart } from "lucide-react";
+import { useCart } from "@/app/context/CartContext";
 
 const menuItems = [
   { name: "Lobby (Home)", href: "/user/dashboard", icon: Home },
@@ -14,6 +15,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { cart } = useCart();
 
   return (
     <nav className="space-y-3 sticky top-24">
@@ -37,6 +39,24 @@ export default function Sidebar() {
           </Link>
         );
       })}
+      <Link
+        href="/user/cart"
+        className={`flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 ${
+          pathname === "/user/cart" 
+            ? "bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]" 
+            : "text-gray-400 hover:bg-gray-800 hover:text-white"
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          <ShoppingCart size={20} />
+          <span className="font-semibold tracking-wide">Cart</span>
+        </div>
+        {cart && cart.totalItems > 0 && (
+          <span className="bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            {cart.totalItems}
+          </span>
+        )}
+      </Link>
     </nav>
   );
 }

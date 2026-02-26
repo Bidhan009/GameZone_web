@@ -16,10 +16,9 @@ export default function UpdateUserForm({
         useForm<UpdateUserData>({
             resolver: zodResolver(updateUserSchema),
             values: {
-                firstName: user?.firstName || '',
-                lastName: user?.lastName || '',
+                fullName: user?.fullName || '',
                 email: user?.email || '',
-                username: user?.username || ''
+                phone: user?.phone || ''
             }
         });
 
@@ -52,10 +51,9 @@ export default function UpdateUserForm({
         setError(null);
         try {
             const formData = new FormData();
-            formData.append('firstName', data.firstName);
-            formData.append('lastName', data.lastName);
+            formData.append('fullName', data.fullName);
             formData.append('email', data.email);
-            formData.append('username', data.username);
+            formData.append('phone', data.phone);
             if (data.image) {
                 formData.append('image', data.image);
             }
@@ -137,14 +135,14 @@ export default function UpdateUserForm({
                     {errors.image && <p className="text-sm text-red-600">{errors.image.message}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="username">Username</label>
+                    <label className="block text-sm font-medium mb-1" htmlFor="fullName">Full Name</label>
                     <input
-                        id="username"
+                        id="fullName"
                         type="text"
-                        {...register("username")}
+                        {...register("fullName")}
                         className="w-full border border-gray-300 rounded px-3 py-2"
                     />
-                    {errors.username && <p className="text-sm text-red-600">{errors.username.message}</p>}
+                    {errors.fullName && <p className="text-sm text-red-600">{errors.fullName.message}</p>}
                 </div>
                 <div>
                     <label className="block text-sm font-medium mb-1" htmlFor="email">Email</label>
@@ -156,28 +154,15 @@ export default function UpdateUserForm({
                     />
                     {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
                 </div>
-                {/* First Name Input */}
                 <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="firstName">First Name</label>
+                    <label className="block text-sm font-medium mb-1" htmlFor="phone">Phone</label>
                     <input
-                        id="firstName"
-                        type="text"
-                        {...register("firstName")}
+                        id="phone"
+                        type="tel"
+                        {...register("phone")}
                         className="w-full border border-gray-300 rounded px-3 py-2"
                     />
-                    {errors.firstName && <p className="text-sm text-red-600">{errors.firstName.message}</p>}
-                </div>
-
-                {/* Last Name Input */}
-                <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="lastName">Last Name</label>
-                    <input
-                        id="lastName"
-                        type="text"
-                        {...register("lastName")}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                    {errors.lastName && <p className="text-sm text-red-600">{errors.lastName.message}</p>}
+                    {errors.phone && <p className="text-sm text-red-600">{errors.phone.message}</p>}
                 </div>
 
                 {/* Submit Button */}

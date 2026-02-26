@@ -14,6 +14,13 @@ export const API = {
         GET_ALL: '/api/products',
         GET_ONE: (productId: string) => `/api/products/${productId}`,
     },
+    CART: {
+        GET: '/api/cart',
+        ADD: '/api/cart',
+        UPDATE: '/api/cart',
+        REMOVE: (productId: string) => `/api/cart/${productId}`,
+        CLEAR: '/api/cart',
+    },
     ADMIN: {
         USER: {
             CREATE: '/api/admin/users',
