@@ -1,6 +1,7 @@
 import { promises } from 'dns';
 import axios from './axios';
 import { API } from './endpoints';
+// import { Order } from './admin/order';
 
 
 export interface CreateOrderItem {
@@ -10,25 +11,43 @@ export interface CreateOrderItem {
 }
 
 export interface OrderItem {
-    productId:{
-        _id: string; 
-        name: string; 
-        productImage?: string[];
-        image?:string; 
-    }
-    quantity: number; 
-    price : number; 
+    product: { _id: string; name: string; imageUrl: string; price: number; }
+    quantity: number;
+    price: number;
 }
 
 export interface Order {
-    _id: string; 
-    userId: string; 
+    _id: string;
+    user: { _id: string; fullName: string; email: string; }  // Add this
     items: OrderItem[];
-    totalAmount: number; 
-    createdAt: string; 
-    updatedAt: string; 
- 
+    totalAmount: number;
+    createdAt: string;
+    updatedAt: string;
 }
+// }
+// export interface IPopulatedOrderItem {
+//   product: {
+//     _id: string;
+//     name: string;
+//     imageUrl: string;
+//     price: number;
+//   };
+//   quantity: number;
+//   price: number;
+// }
+
+// export interface IPopulatedOrder {
+//   _id: string;
+//   user: {
+//     _id: string;
+//     fullName: string;
+//     email: string;
+//   };
+//   items: IPopulatedOrderItem[];
+//   totalAmount: number;
+//   status: string;
+//   createdAt: string;
+// }
 
 // export const createOrder = async (items: CreateOrderItem[], totalAmount : number) =>{
 //     try {
@@ -77,11 +96,10 @@ export const createOrder = async (payload: any) => {
 
 export const getOrders = async (): Promise<Order[]> => {
   try {
-    // Replace API.ORDER.GET with your actual GET endpoint string if not defined
-    const response = await axios.get<{ data: Order[] }>("/api/orders"); 
+    const response = await axios.get<{ data: Order[] }>(API.ORDER.GET_ALL); 
     return response.data.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch orders');
+    throw new Error(error.response?.data?.message || error.message || 'Failed to fetch orders');
   }
 };
 
