@@ -34,12 +34,12 @@ export default function CheckoutPage() {
     email: cart?.user?.email || "",
   });
 
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-  });
+//   const [paymentInfo, setPaymentInfo] = useState({
+//     cardNumber: "",
+//     cardName: "",
+//     expiryDate: "",
+//     cvv: "",
+//   });
 
   const [sameAsShipping, setSameAsShipping] = useState(true);
 
@@ -85,15 +85,29 @@ export default function CheckoutPage() {
         throw new Error("Please provide a phone number");
       }
 
+      if (!cart) {
+        throw new Error("Cart is not loaded");
+      }
+
       // Create order items
       const orderItems = cart.items.map(item => ({
-        productId: item.product._id,
+        product: item.product._id,
         quantity: item.quantity,
         price: item.product.price
       }));
 
+        const orderPayload = {
+        items: orderItems,
+        totalAmount: cart.totalPrice,
+        shippingAddress,
+        contactInfo,
+        paymentMethod: "COD", // Cash on Delivery
+        paymentStatus: "pending",
+        status: "pending",
+        };
+
       // Place order
-      await createOrder(orderItems, cart.totalPrice);
+      await createOrder(orderPayload);
       
       // Clear cart and redirect
       clearCart();
@@ -295,59 +309,32 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Information */}
-            <div className="bg-[#1c212a] p-6 rounded-2xl border border-gray-800">
-              <h2 className="flex items-center gap-2 text-white font-bold mb-4">
-                <CreditCard size={20} className="text-indigo-500" /> Payment Information
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Card Number</label>
-                  <input
-                    type="text"
-                    value={paymentInfo.cardNumber}
-                    onChange={(e) => setPaymentInfo(prev => ({ ...prev, cardNumber: e.target.value }))}
-                    className="w-full bg-[#0f1115] border border-gray-800 rounded-lg p-3 text-white"
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Cardholder Name</label>
-                  <input
-                    type="text"
-                    value={paymentInfo.cardName}
-                    onChange={(e) => setPaymentInfo(prev => ({ ...prev, cardName: e.target.value }))}
-                    className="w-full bg-[#0f1115] border border-gray-800 rounded-lg p-3 text-white"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">Expiry Date</label>
+            {/* Payment Method - Cash on Delivery */}
+                <div className="bg-[#1c212a] p-6 rounded-2xl border border-gray-800">
+                <h2 className="flex items-center gap-2 text-white font-bold mb-4">
+                    <Truck size={20} className="text-indigo-500" /> Payment Method
+                </h2>
+
+                <div className="flex items-start gap-3 p-4 bg-[#0f1115] border border-gray-800 rounded-xl">
                     <input
-                      type="text"
-                      value={paymentInfo.expiryDate}
-                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, expiryDate: e.target.value }))}
-                      className="w-full bg-[#0f1115] border border-gray-800 rounded-lg p-3 text-white"
-                      placeholder="MM/YY"
-                      maxLength={5}
+                    type="radio"
+                    checked
+                    readOnly
+                    className="mt-1 accent-indigo-600"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">CVV</label>
-                    <input
-                      type="text"
-                      value={paymentInfo.cvv}
-                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, cvv: e.target.value }))}
-                      className="w-full bg-[#0f1115] border border-gray-800 rounded-lg p-3 text-white"
-                      placeholder="123"
-                      maxLength={3}
-                    />
-                  </div>
+                    <div>
+                    <p className="text-white font-semibold">Cash on Delivery (COD)</p>
+                    <p className="text-gray-400 text-sm">
+                        Pay with cash when your order is delivered to your address.
+                    </p>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
+
+                <p className="text-green-400 text-sm mt-4">
+                    ✔ No online payment required.
+                </p>
+                </div>
+                        </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
