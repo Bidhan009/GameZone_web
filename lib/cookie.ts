@@ -20,7 +20,8 @@ export const setAuthToken = async (token: string) => {
 }
 export const getAuthToken = async () => {
     const cookieStore = await cookies();
-    return cookieStore.get('auth_token')?.value || null;
+    const token = cookieStore.get("auth_token")?.value;
+    return token || null;
 }
 export const setUserData = async (userData: UserData) => {
     const cookieStore = await cookies();

@@ -57,9 +57,9 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cart.items.map((item) => (
+          {cart.items.map((item,index) => (
             <div
-              key={`${item.product._id}`}
+            key={`${item.product._id}-${index}`}
               className="flex gap-4 p-4 bg-[#1c212a] rounded-2xl border border-gray-800"
             >
               <div className="w-24 h-24 rounded-xl bg-[#0f1115] flex items-center justify-center overflow-hidden">

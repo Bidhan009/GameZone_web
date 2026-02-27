@@ -9,7 +9,7 @@
 // }
 "use client";
 
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/app/context/AuthContext";
 
 export default function PublicLayout({
   children,

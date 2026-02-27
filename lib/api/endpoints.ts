@@ -21,6 +21,12 @@ export const API = {
         REMOVE: (productId: string) => `/api/cart/${productId}`,
         CLEAR: '/api/cart',
     },
+    // Add to API object:
+    ORDER: {
+    CREATE: '/api/orders',
+    GET_ALL: '/api/orders',
+    GET_ONE: (orderId: string) => `/api/orders/${orderId}`,
+    },
     ADMIN: {
         USER: {
             CREATE: '/api/admin/users',
@@ -35,6 +41,13 @@ export const API = {
             GET_ONE: (productId: string) => `/api/admin/products/${productId}`,
             UPDATE: (productId: string) => `/api/admin/products/${productId}`,
             DELETE: (productId: string) => `/api/admin/products/${productId}`,
-        }
+        },
+        ORDER: {
+            GET_ALL: '/api/admin/orders/all', 
+            GET_ONE: (orderId: string) => `/api/admin/orders/${orderId}`, 
+            UPDATE_PAYMENT: (orderId: string) => `/api/orders/${orderId}/payment`, 
+            REFUND : (orderId: string) => `/api/orders/${orderId}/refund`,
+
+        },
     }
 }

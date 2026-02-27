@@ -3,17 +3,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Heart, Package, CreditCard, User, Gamepad2, Settings, ShoppingCart } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { useFavorites } from "@/app/context/FavoritesContext";
+// eslint-disable-next-line react-hooks/rules-of-hooks
+
 
 const menuItems = [
   { name: "Lobby (Home)", href: "/user/dashboard", icon: Home },
   { name: "Products", href: "/user/products", icon: Gamepad2 },
-  { name: "My Collection", href: "/user/favourites", icon: Heart },
+  // { name: "My Collection", href: "/user/favorites", icon: Heart },
   { name: "Order History", href: "/user/orders", icon: Package },
   { name: "Wallet & Credits", href: "/user/payment", icon: CreditCard },
   { name: "Gamer Profile", href: "/user/profile", icon: User },
 ];
 
 export default function Sidebar() {
+  const { favorites } = useFavorites();
   const pathname = usePathname();
   const { cart } = useCart();
 
@@ -57,6 +61,25 @@ export default function Sidebar() {
           </span>
         )}
       </Link>
+      <Link
+  href="/user/favorites"
+  className={`flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 ${
+    pathname === "/user/favorites" 
+      ? "bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]" 
+      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+  }`}
+>
+  <div className="flex items-center gap-4">
+    <Heart size={20} />
+    <span className="font-semibold tracking-wide">My Collections</span>
+  </div>
+
+  {favorites.length > 0 && (
+    <span className="bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+      {favorites.length}
+    </span>
+  )}
+</Link>
     </nav>
   );
 }
