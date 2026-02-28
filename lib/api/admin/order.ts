@@ -1,72 +1,75 @@
 import axios from '../axios'
 import { API } from '../endpoints'
 
-export interface OrderItem {
-    plantId: {
-        _id: string, 
-        name: string, 
-        plantImage?: string[];
-        image?:string; 
+export interface AdminOrderItem {
+    product: {
+        _id: string;
+        name: string;
+        imageUrl: string;
+        price: number;
+        category: string;
     };
-    quantity: number; 
+    quantity: number;
     price: number;
 }
 
-export interface Order {
-    _id: string; 
-    userId: {
-        _id: string; 
-        firstName: string; 
-        lastName: string; 
-        email: string; 
+export interface AdminOrder {
+    _id: string;
+    user: {
+        _id: string;
+        fullName: string;
+        email: string;
+        phone?: string;
     };
-    items: OrderItem[]; 
-    totalAmount: number; 
-    createdAt: string; 
-    updatedAt: string; 
-    paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-    paymentMethod: string;
-    transactionId?: string;
-    paidAt?: string;
+    items: AdminOrderItem[];
+    totalAmount: number;
+    shippingAddress: {
+        street: string;
+        city: string;
+        zipCode: string;
+    };
+    status: 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled';
+    createdAt: string;
+    updatedAt: string;
 }
 
-export const getAllOrders = async()=>{
+export interface OrderStats {
+    totalOrders: number;
+    totalRevenue: number;
+    pendingOrders: number;
+    paidOrders: number;
+    shippedOrders: number;
+    completedOrders: number;
+    cancelledOrders: number;
+}
+
+export const getAllAdminOrders = async (status?: string, sortBy?: string) => {
     try {
-        const response = await axios.get(API.ADMIN.ORDER.GET_ALL);
-        return response.data; 
-    }catch(error: Error | any){
-        throw new Error(error.response?.data?.message || error.message || 'Get all orders failed');
+        const params = new URLSearchParams();
+        if (status) params.append('status', status);
+        if (sortBy) params.append('sortBy', sortBy);
+
+        const response = await axios.get(API.ADMIN.ORDER.GET_ALL, { params });
+        return response.data.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || error.message || 'Failed to fetch orders');
     }
 };
 
-export const getOrderById = async(orderId: string) =>{
+export const getAdminOrderById = async (orderId: string) => {
     try {
         const response = await axios.get(API.ADMIN.ORDER.GET_ONE(orderId));
-        return response.data;
-    }catch (error: Error | any){
-        throw new Error(error.response?.data?.message || error.message || 'Get Order failed');
+        return response.data.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || error.message || 'Failed to fetch order');
     }
 };
 
-export const updatePaymentStatus = async (orderId: string, paymentStatus: string, paymentMethod?: string, transactionId?: string)=>{
+export const getOrderStats = async () => {
     try {
-        const response = await axios.patch(API.ADMIN.ORDER.UPDATE_PAYMENT(orderId), {
-            paymentStatus, 
-            paymentMethod, 
-
-        });
-        return response.data; 
-
-    }catch(error: Error| any){
-        throw new Error(error.response?.data?.message || error.message || 'Update pyament status failed');
-    }
-};
-
-export const refundOrder = async (orderId: string) =>{
-    try {
-        const response = await axios.post(API.ADMIN.ORDER.REFUND(orderId));
-        return response.data; 
-    }catch (error: Error | any){
-        throw new Error(error.response?.data?.message || error.message || 'Refund order failed');
+        const response = await axios.get(`${API.ADMIN.ORDER.GET_ALL}/stats`);
+        return response.data.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || error.message || 'Failed to fetch order stats');
     }
 };

@@ -43,11 +43,8 @@ export const API = {
             DELETE: (productId: string) => `/api/admin/products/${productId}`,
         },
         ORDER: {
-            GET_ALL: '/api/admin/orders/all', 
+            GET_ALL: '/api/admin/orders', 
             GET_ONE: (orderId: string) => `/api/admin/orders/${orderId}`, 
-            UPDATE_PAYMENT: (orderId: string) => `/api/orders/${orderId}/payment`, 
-            REFUND : (orderId: string) => `/api/orders/${orderId}/refund`,
-
         },
     }
 }

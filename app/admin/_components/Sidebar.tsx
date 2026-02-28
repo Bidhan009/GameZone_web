@@ -6,11 +6,12 @@ import {
   LayoutDashboard, 
   Users, 
   Gamepad2, 
+  ShoppingCart,
   Settings, 
   ShieldCheck, 
   PackagePlus,
-  UserPlus
-} from "lucide-react";
+  UserPlus} from "lucide-react";
+
 
 const NAVIGATION_GROUPS = [
   {
@@ -24,6 +25,7 @@ const NAVIGATION_GROUPS = [
     links: [
       { href: "/admin/users", label: "All Users", icon: Users },
       { href: "/admin/products", label: "Inventory", icon: Gamepad2 },
+      { href: "/admin/orders", label: "Orders", icon:  ShoppingCart },
     ],
   },
   {
