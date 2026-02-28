@@ -73,3 +73,24 @@ export const getOrderStats = async () => {
         throw new Error(error.response?.data?.message || error.message || 'Failed to fetch order stats');
     }
 };
+
+//Added code
+export const updateAdminOrderStatus = async (
+    orderId: string,
+    status: AdminOrder["status"]
+): Promise<AdminOrder> => {
+    try {
+        const response = await axios.put<{ success: boolean; data: AdminOrder }>(
+            API.ADMIN.ORDER.UPDATE_STATUS(orderId),
+            { status }
+        );
+
+        return response.data.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to update order status"
+        );
+    }
+};

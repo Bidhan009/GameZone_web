@@ -5,6 +5,7 @@ import {  useState, useRef } from "react";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { handleUpdateProfile } from "@/lib/actions/auth-action";
+import { useAuth } from "@/app/context/AuthContext";
 
 import { z } from "zod";
 import { UpdateUserData, updateUserSchema } from "../schema";
@@ -12,17 +13,22 @@ import { UpdateUserData, updateUserSchema } from "../schema";
 export default function UpdateUserForm({
     user
 }: { user: any }) {
+    const { user: authUser } = useAuth();
+    // prefer the client-updated user from context, fall back to the server-provided prop
+    const currentUser = authUser || user;
+
     const { register, handleSubmit, control, formState: { errors, isSubmitting } } =
         useForm<UpdateUserData>({
             resolver: zodResolver(updateUserSchema),
             values: {
-                fullName: user?.fullName || '',
-                email: user?.email || '',
-                phone: user?.phone || ''
+                fullName: currentUser?.fullName || '',
+                email: currentUser?.email || '',
+                phone: currentUser?.phone || ''
             }
         });
 
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState<{ type: 'success'|'error'; text: string } | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,15 +53,19 @@ export default function UpdateUserForm({
         }
     };
 
+    const { checkAuth, setUser } = useAuth();
+
     const onSubmit = async (data: UpdateUserData) => {
         setError(null);
+        setMessage(null);
         try {
             const formData = new FormData();
             formData.append('fullName', data.fullName);
             formData.append('email', data.email);
             formData.append('phone', data.phone);
             if (data.image) {
-                formData.append('image', data.image);
+                // multer on backend expects the field name 'profileImage'
+                formData.append('profileImage', data.image);
             }
             const response = await handleUpdateProfile(formData);
             
@@ -65,9 +75,19 @@ export default function UpdateUserForm({
 
             handleDismissImage();
             toast.success('Profile updated successfully');
+            setMessage({ type: 'success', text: 'Profile updated successfully' });
+
+            // update context directly so header immediately shows new data
+            if (response.data) {
+                setUser(response.data);
+            }
+            // also refresh auth context from cookie just in case
+            await checkAuth();
         } catch (error: Error | any) {
             toast.error(error.message || 'Profile update failed');
-            setError(error.message || 'Profile update failed');
+            const msg = error.message || 'Profile update failed';
+            setError(msg);
+            setMessage({ type: 'error', text: msg });
         }
     };
 
@@ -75,7 +95,10 @@ export default function UpdateUserForm({
         <div>
             <h1 className="text-2xl font-bold mb-4">Profile Page</h1>
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-                {error && (
+{message && (
+                <p className={`text-sm mb-2 ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{message.text}</p>
+            )}
+            {error && (
                     <p className="text-sm text-red-600">{error}</p>
                 )}
 
@@ -102,13 +125,20 @@ export default function UpdateUserForm({
                                 )}
                             />
                         </div>
-                    ) : user?.imageUrl ? (
+                    ) : currentUser?.profileImage ? (
                         <Image
-                            src={process.env.NEXT_PUBLIC_API_BASE_URL + user.imageUrl}
+                            src={
+                                currentUser.profileImage.startsWith("http")
+                                    ? currentUser.profileImage
+                                    : currentUser.profileImage.startsWith("/")
+                                        ? currentUser.profileImage // relative path on same host
+                                        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${currentUser.profileImage}`
+                            }
                             alt="Profile Image"
                             width={100}
                             height={100}
                             className="w-24 h-24 rounded-full object-cover"
+                            unoptimized // avoid fetching/optimizing which can trigger private IP check
                         />
                     ) : (
                         <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">

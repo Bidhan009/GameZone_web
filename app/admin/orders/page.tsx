@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getAllAdminOrders, getOrderStats } from "@/lib/api/admin/order";
+import { getAllAdminOrders, getOrderStats,updateAdminOrderStatus } from "@/lib/api/admin/order";
 import { AdminOrder, OrderStats } from "@/lib/api/admin/order";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
@@ -11,6 +11,8 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -55,6 +57,23 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    setUpdatingOrderId(orderId);
+    setMessage(null);
+    try {
+      console.log(`Updating order ${orderId} to status ${newStatus}`);
+      await updateAdminOrderStatus(orderId, status); //newStatus
+      console.log('Update successful');
+      setMessage({ type: 'success', text: 'Order status updated successfully!' });
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating order status:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to update order status' });
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
   if (loading && orders.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
@@ -66,6 +85,13 @@ export default function AdminOrdersPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <h1 className="text-4xl font-bold mb-8">📦 Order Management</h1>
+      
+      {/* Message Notification */}
+      {message && (
+        <div className={`mb-6 p-4 rounded-lg border ${message.type === 'success' ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-red-500/20 border-red-500/50 text-red-400'}`}>
+          {message.text}
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -154,9 +180,27 @@ export default function AdminOrdersPage() {
                     <p className="text-sm font-semibold text-indigo-400">${order.totalAmount.toFixed(2)}</p>
                   </div>
                   <div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
+                      disabled={updatingOrderId === order._id}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium capitalize bg-gray-800 border border-gray-700 focus:outline-none focus:border-indigo-500 cursor-pointer ${
+                        updatingOrderId === order._id ? 'opacity-50 cursor-not-allowed' : ''
+                      } ${
+                        order.status === 'pending' ? 'border-yellow-500/50' :
+                        order.status === 'paid' ? 'border-blue-500/50' :
+                        order.status === 'shipped' ? 'border-purple-500/50' :
+                        order.status === 'completed' ? 'border-green-500/50' :
+                        order.status === 'cancelled' ? 'border-red-500/50' : ''
+                      }`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="paid">Paid</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    {updatingOrderId === order._id && <span className="text-xs text-gray-400 ml-2">Updating...</span>}
                   </div>
                 </div>
               </div>
