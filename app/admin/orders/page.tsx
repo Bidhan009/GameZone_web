@@ -62,7 +62,7 @@ export default function AdminOrdersPage() {
     setMessage(null);
     try {
       console.log(`Updating order ${orderId} to status ${newStatus}`);
-      await updateAdminOrderStatus(orderId, status); //newStatus
+      await updateAdminOrderStatus(orderId, newStatus);
       console.log('Update successful');
       setMessage({ type: 'success', text: 'Order status updated successfully!' });
       loadData();

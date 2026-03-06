@@ -98,7 +98,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <WishlistButton productId={product._id} />
+                        <WishlistButton product={product} />
                             </div>
 
                             <ProductPurchaseSection

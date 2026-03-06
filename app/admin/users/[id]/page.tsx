@@ -26,6 +26,13 @@ export default async function UserDetailPage({
 
     const user = result.data;
     const joinedDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A';
+    
+    const resolveMediaUrl = (path?: string) => {
+      if (!path) return '';
+      if (path.startsWith('http')) return path;
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+      return `${base}${path}`;
+    };
 
     return (
         <div className="p-6">
@@ -51,7 +58,7 @@ export default async function UserDetailPage({
                     <div className="flex flex-col items-center mb-6">
                         {user.profileImage ? (
                             <img 
-                                src={user.profileImage} 
+                                src={resolveMediaUrl(user.profileImage)} 
                                 alt={user.fullName || 'User'} 
                                 className="h-32 w-32 rounded-full object-cover ring-4 ring-border"
                             />

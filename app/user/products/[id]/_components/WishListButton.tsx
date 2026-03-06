@@ -1,46 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useFavorites } from "@/app/context/FavoritesContext";
 import { Heart } from "lucide-react";
 
 interface WishlistButtonProps {
-  productId: string;
+  product: {
+    _id: string;
+    name?: string;
+    title?: string;
+    price: number;
+    description: string;
+    imageUrl: string;
+    category?: string;
+    genre?: string;
+  };
 }
 
-export default function WishlistButton({ productId }: WishlistButtonProps) {
-  const [isSaved, setIsSaved] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function WishlistButton({ product }: WishlistButtonProps) {
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const isWishlisted = isFavorite(product._id);
 
-  const toggleWishlist = async () => {
-    try {
-      setLoading(true);
-
-      // TODO: Replace with your real API call
-      await fetch(`/api/wishlist/${productId}`, {
-        method: isSaved ? "DELETE" : "POST",
-      });
-
-      setIsSaved(!isSaved);
-    } catch (error) {
-      console.error("Wishlist error:", error);
-    } finally {
-      setLoading(false);
+  const toggleWishlist = () => {
+    if (isWishlisted) {
+      removeFromFavorites(product._id);
+    } else {
+      addToFavorites(product);
     }
   };
 
   return (
     <button
       onClick={toggleWishlist}
-      disabled={loading}
       className={`p-3 rounded-full border transition-all ${
-        isSaved
+        isWishlisted
           ? "bg-red-600 border-red-600"
           : "bg-gray-800 border-gray-700 hover:border-red-500"
       }`}
     >
       <Heart
         className={`h-5 w-5 ${
-          isSaved ? "text-white fill-white" : "text-gray-400"
+          isWishlisted ? "text-white fill-white" : "text-gray-400"
         }`}
       />
     </button>

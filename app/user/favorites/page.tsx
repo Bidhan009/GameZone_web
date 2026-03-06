@@ -2,8 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Heart, ShoppingCart, Trash2, ArrowLeft, Gamepad2, Star } from "lucide-react";
+import { Heart, ShoppingCart, Trash2, ArrowLeft, Gamepad2, Star, Package } from "lucide-react";
 import { toast } from "react-toastify";
 
 // Hooks for your Clean Architecture Layers
@@ -74,19 +73,35 @@ export default function FavoritesPage() {
         ) : (
           /* Games Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {favorites.map((product) => (
+            {favorites.map((product: {
+              _id: string;
+              title?: string;
+              name?: string;
+              price: number;
+              genre?: string;
+              category?: string;
+              rating?: string;
+              imageUrl?: string | null;
+            }) => (
               <div 
                 key={product._id} 
                 className="group bg-[#1c212a] rounded-2xl overflow-hidden border border-gray-800 hover:border-indigo-500/50 transition-all duration-300 shadow-lg"
               >
                 {/* product Poster */}
-                <div className="relative h-48 w-full bg-gray-900">
-                  <Image
-                    src={product.imageUrl?.startsWith("http") ? product.imageUrl : `${process.env.NEXT_PUBLIC_API_BASE_URL}${product.imageUrl}`}
-                    alt={(product.title || product.name) ?? "Game poster"}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                <div className="relative h-48 w-full bg-gray-900 flex items-center justify-center">
+                  {product.imageUrl ? (
+                    <img
+                      src={
+                        product.imageUrl.startsWith("http")
+                          ? product.imageUrl
+                          : `${process.env.NEXT_PUBLIC_API_BASE_URL}${product.imageUrl}`
+                      }
+                      alt={(product.title || product.name) ?? "Game poster"}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <Package className="h-16 w-16 text-gray-600" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1c212a] to-transparent opacity-60" />
                   
                   <button 

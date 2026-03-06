@@ -130,9 +130,7 @@ export default function UpdateUserForm({
                             src={
                                 currentUser.profileImage.startsWith("http")
                                     ? currentUser.profileImage
-                                    : currentUser.profileImage.startsWith("/")
-                                        ? currentUser.profileImage // relative path on same host
-                                        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${currentUser.profileImage}`
+                                    : `${process.env.NEXT_PUBLIC_API_BASE_URL}${currentUser.profileImage}`
                             }
                             alt="Profile Image"
                             width={100}

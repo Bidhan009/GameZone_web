@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    // allow loading images from the API server running on localhost:5000 (and other hosts if needed)
+    // allow loading images from the API server running on localhost (any port)
     domains: ['localhost'],
     remotePatterns: [
       {
@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'localhost',
         port: '5000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+        port: '3000',
         pathname: '/**',
       },
     ],

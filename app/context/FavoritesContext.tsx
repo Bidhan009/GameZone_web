@@ -12,7 +12,7 @@ export interface Product {
   name?: string;
   price: number;
   description: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   genre?: string; // e.g. "Action / RPG"
   category?: string;
   rating?: string;
@@ -48,7 +48,13 @@ export const FavoritesProvider: React.FC<FavoritesProviderProps> = ({ children }
         if (typeof window !== "undefined") {
           const savedFavorites = localStorage.getItem("gamezone_wishlist");
           if (savedFavorites) {
-            setFavorites(JSON.parse(savedFavorites));
+            const parsed: Product[] = JSON.parse(savedFavorites);
+            // ensure all items have imageUrl defined (null if missing)
+            const sanitized = parsed.map((p) => ({
+              ...p,
+              imageUrl: p.imageUrl ?? null,
+            }));
+            setFavorites(sanitized);
           }
         }
       } catch (error) {
