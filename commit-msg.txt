@@ -1,0 +1,26 @@
+[SEC-12] Fix: Insecure cookie attributes on auth_token and user_data
+
+Found that the cookies storing the JWT token and user data after
+login had no security attributes set at all. No httpOnly flag,
+meaning client side JavaScript could potentially read these cookies
+directly if any XSS vulnerability existed anywhere else in the app.
+No secure flag, no sameSite setting, and no explicit expiry, which
+meant the cookie was a session cookie that would outlive the actual
+JWT's real expiry time in some browser scenarios.
+
+Confirmed this by checking DevTools Application tab after a normal
+login and seeing HttpOnly and SameSite both unset and Expires
+showing Session instead of a real timestamp.
+
+Fixed by explicitly setting httpOnly to true on both cookies so
+client side JavaScript can no longer read them at all, secure set
+to true only in production so it still works over plain http on
+localhost during development, sameSite set to lax as csrf defense
+in depth, and maxAge set to match the 1 hour JWT expiry from the
+SEC-07 fix, so the cookie and the token it holds now expire
+together consistently.
+
+Retested after the fix by logging out and back in, then checking
+DevTools again, and confirmed both cookies now show HttpOnly
+checked, SameSite set to Lax, and a real expiry timestamp
+approximately 1 hour out instead of Session.

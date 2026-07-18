@@ -11,11 +11,19 @@ export interface UserData {
     updatedAt: string;
     [key: string]: any;
 }
+
+const COOKIE_MAX_AGE = 60 * 60; // 1 hour, in seconds — matches SEC-07's JWT expiry
+
 export const setAuthToken = async (token: string) => {
     const cookieStore = await cookies();
     cookieStore.set({
         name: 'auth_token',
         value: token,
+        httpOnly: true,                                  // JS cannot read this cookie — blocks XSS token theft
+        secure: process.env.NODE_ENV === 'production',    // HTTPS-only in production; allows localhost HTTP in dev
+        sameSite: 'lax',                                  // CSRF defense-in-depth
+        maxAge: COOKIE_MAX_AGE,                           // matches JWT expiry — no stale cookie outliving the token
+        path: '/',
     })
 }
 export const getAuthToken = async () => {
@@ -28,6 +36,11 @@ export const setUserData = async (userData: UserData) => {
     cookieStore.set({
         name: 'user_data',
         value: JSON.stringify(userData),
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: COOKIE_MAX_AGE,
+        path: '/',
     })
 }
 export const getUserData = async (): Promise<UserData | null> => {
