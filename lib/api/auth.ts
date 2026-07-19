@@ -101,4 +101,37 @@ export const logout = async (): Promise<ApiResponse> => {
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message || error.message || 'Logout failed');
     }
+
+export const setupMfa = async (): Promise<ApiResponse<{ qrCodeDataUrl: string; manualEntryKey: string }>> => {
+    try {
+        const token = await getAuthToken();
+        const response = await axios.post(API.AUTH.MFA_SETUP, {}, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'MFA setup failed');
+    }
+};
+
+export const confirmMfa = async (mfaToken: string): Promise<ApiResponse> => {
+    try {
+        const token = await getAuthToken();
+        const response = await axios.post(API.AUTH.MFA_CONFIRM, { token: mfaToken }, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'MFA confirmation failed');
+    }
+};
+
+export const verifyMfaLogin = async (mfaPendingToken: string, mfaCode: string): Promise<ApiResponse> => {
+    try {
+        const response = await axios.post(API.AUTH.MFA_VERIFY_LOGIN, { mfaPendingToken, mfaCode });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'MFA verification failed');
+    }
+};
 }

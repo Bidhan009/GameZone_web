@@ -6,6 +6,7 @@ import { LoginData, RegisterData } from "@/app/(auth)/schema";
 import { setAuthToken, setUserData, clearAuthCookies } from "../cookie";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { setupMfa, confirmMfa, verifyMfaLogin } from "@/lib/api/auth";
 
 
 export const handleRegister = async (data: RegisterData): Promise<ApiResponse> => {
@@ -129,5 +130,39 @@ export async function handleResetPassword (token: string, newPassword: string) {
         return { success: false, message: result.message || 'Reset password failed' }
     } catch (error: Error | any) {
         return { success: false, message: error.message || 'Reset password action failed' }
+    }
+};
+
+export const handleSetupMfa = async () => {
+    try {
+        const result = await setupMfa();
+        if (result.success) {
+            return { success: true, data: result.data };
+        }
+        return { success: false, message: result.message || 'MFA setup failed' };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+};
+
+export const handleConfirmMfa = async (mfaToken: string) => {
+    try {
+        const result = await confirmMfa(mfaToken);
+        return { success: result.success, message: result.message };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+};
+
+export const handleVerifyMfaLogin = async (mfaPendingToken: string, mfaCode: string): Promise<ApiResponse> => {
+    try {
+        const response = await verifyMfaLogin(mfaPendingToken, mfaCode);
+        if (response.success && !response.mfaRequired) {
+            if (response.token) await setAuthToken(response.token);
+            if (response.data) await setUserData(response.data);
+        }
+        return response;
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
     }
 };
