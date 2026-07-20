@@ -8,6 +8,8 @@ export interface ApiResponse<T = UserData> {
     message?: string;
     token?: string;
     data?: T;
+    mfaRequired?: boolean;    
+    mfaPendingToken?: string;
 }
 
 export const register = async (registerData: RegisterData): Promise<ApiResponse> => {
@@ -101,6 +103,7 @@ export const logout = async (): Promise<ApiResponse> => {
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message || error.message || 'Logout failed');
     }
+}
 
 export const setupMfa = async (): Promise<ApiResponse<{ qrCodeDataUrl: string; manualEntryKey: string }>> => {
     try {
@@ -134,4 +137,3 @@ export const verifyMfaLogin = async (mfaPendingToken: string, mfaCode: string): 
         throw new Error(error.response?.data?.message || error.message || 'MFA verification failed');
     }
 };
-}

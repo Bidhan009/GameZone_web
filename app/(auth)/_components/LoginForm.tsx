@@ -3,16 +3,23 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState, useTransition } from "react"; 
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LoginData, loginSchema } from "../schema";
-import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
-import { handleLogin } from "@/lib/actions/auth-action";
+import { Mail, Lock, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { handleLogin, handleVerifyMfaLogin } from "@/lib/actions/auth-action";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function LoginForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+
+  // MFA state
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaPendingToken, setMfaPendingToken] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
 
   const {
     register,
@@ -20,50 +27,128 @@ export default function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    mode: "onBlur", 
+    mode: "onBlur",
   });
+
+  const redirectByRole = (role: string | undefined) => {
+    const r = role?.toLowerCase();
+    if (r === "admin") router.push("/admin");
+    else if (r === "user") router.push("/user/dashboard");
+    else router.push("/");
+    router.refresh();
+  };
 
   const onSubmit = async (values: LoginData) => {
     setServerError(null);
 
+    if (!captchaValue) {
+      setServerError("Please complete the CAPTCHA verification.");
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const response = await handleLogin(values);
+        const response = await handleLogin({ ...values, captchaToken: captchaValue } as any);
 
-        // FIX #1: STOP REDIRECTION IF LOGIN FAILED
         if (!response.success) {
           setServerError(response.message || "Invalid credentials.");
-          return; // This 'return' is crucial. It stops the code from reaching the router.push below.
+          return;
         }
 
-        // FIX #2: DATA SAFETY CHECK
+        // NEW: handle MFA-required response
+        if (response.mfaRequired) {
+          setMfaRequired(true);
+          setMfaPendingToken(response.mfaPendingToken || null);
+          return;
+        }
+
         const user = response.data;
         if (!user) {
           setServerError("Login succeeded but user data is missing.");
           return;
         }
 
-        // FIX #3: ROLE REDIRECTION (Checking exact role strings)
-        // It's safer to use .toLowerCase() in case your DB returns "Admin" or "ADMIN"
-        const role = user.role?.toLowerCase();
-
-        if (role === "admin") {
-          router.push("/admin");
-        } else if (role === "user") {
-          router.push("/user/dashboard");
-        } else {
-          router.push("/");
-        }
-
-        
-        router.refresh(); 
+        redirectByRole(user.role);
       } catch (error: any) {
         setServerError("Connection failed. Check your uplink.");
       }
     });
   };
 
+  const onMfaSubmit = async () => {
+    setServerError(null);
+    if (!mfaPendingToken || mfaCode.length !== 6) {
+      setServerError("Please enter the 6-digit code from your authenticator app.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const response = await handleVerifyMfaLogin(mfaPendingToken, mfaCode);
+
+        if (!response.success) {
+          setServerError(response.message || "Invalid MFA code.");
+          return;
+        }
+
+        const user = response.data;
+        redirectByRole(user?.role);
+      } catch (error: any) {
+        setServerError("MFA verification failed.");
+      }
+    });
+  };
+
   const isLoading = isSubmitting || isPending;
+
+  // MFA code entry screen — shown after password is verified
+  if (mfaRequired) {
+    return (
+      <div className="w-full max-w-md mx-auto p-8 bg-[#1a1f29] border border-gray-800 rounded-2xl shadow-2xl">
+        <div className="text-center mb-8">
+          <ShieldCheck className="w-10 h-10 text-purple-500 mx-auto mb-3" />
+          <h1 className="text-2xl font-bold text-white uppercase tracking-tighter italic">
+            Two-Factor <span className="text-purple-500">Verification</span>
+          </h1>
+          <p className="text-gray-400 text-sm mt-2">
+            Enter the 6-digit code from your authenticator app.
+          </p>
+        </div>
+
+        {serverError && (
+          <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg flex items-center gap-2 text-red-500 text-xs mb-4">
+            <AlertCircle className="w-4 h-4" />
+            {serverError}
+          </div>
+        )}
+
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={6}
+          value={mfaCode}
+          onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+          placeholder="000000"
+          className="w-full bg-[#0f1218] border border-gray-700 rounded-lg py-3 px-4 text-white text-center text-2xl tracking-[0.5em] placeholder:text-gray-600 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 transition-all"
+        />
+
+        <button
+          onClick={onMfaSubmit}
+          disabled={isLoading || mfaCode.length !== 6}
+          className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify"}
+        </button>
+
+        <button
+          onClick={() => { setMfaRequired(false); setMfaCode(""); setServerError(null); }}
+          className="w-full mt-3 text-gray-400 text-sm hover:text-gray-300"
+        >
+          Back to login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-[#1a1f29] border border-gray-800 rounded-2xl shadow-2xl">
@@ -75,8 +160,6 @@ export default function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        
-        {/* Displays the error from the database (e.g., "User not found") */}
         {serverError && (
           <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg flex items-center gap-2 text-red-500 text-xs animate-in fade-in zoom-in duration-200">
             <AlertCircle className="w-4 h-4" />
@@ -133,6 +216,14 @@ export default function LoginForm() {
               <AlertCircle className="w-3 h-3" /> {errors.password.message}
             </p>
           )}
+        </div>
+
+        <div className="flex justify-center">
+          <ReCAPTCHA
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+            onChange={(value) => setCaptchaValue(value)}
+            theme="dark"
+          />
         </div>
 
         <button

@@ -1,12 +1,11 @@
 "use server";
 
-import { login, register, updateProfile, whoAmI, resetPassword, requestPasswordReset } from "@/lib/api/auth";
+import { login, register, updateProfile, whoAmI, resetPassword, requestPasswordReset, setupMfa, confirmMfa, verifyMfaLogin } from "@/lib/api/auth";
 import type { ApiResponse } from "@/lib/api/auth";
 import { LoginData, RegisterData } from "@/app/(auth)/schema";
 import { setAuthToken, setUserData, clearAuthCookies } from "../cookie";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { setupMfa, confirmMfa, verifyMfaLogin } from "@/lib/api/auth";
 
 
 export const handleRegister = async (data: RegisterData): Promise<ApiResponse> => {
