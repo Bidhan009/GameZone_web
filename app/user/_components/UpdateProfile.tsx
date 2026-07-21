@@ -6,6 +6,7 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 import { handleUpdateProfile } from "@/lib/actions/auth-action";
 import { useAuth } from "@/app/context/AuthContext";
+import MfaSettings from "./MfaSettings";
 
 import { z } from "zod";
 import { UpdateUserData, updateUserSchema } from "../schema";
@@ -202,6 +203,7 @@ export default function UpdateUserForm({
                     {isSubmitting ? 'Updating...' : 'Update Profile'}
                 </button>
             </form>
+            <MfaSettings user={currentUser} />
         </div>
     );
 }
