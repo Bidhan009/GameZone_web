@@ -8,9 +8,9 @@ export const API = {
         UPDATEPROFILE: '/api/auth/update-profile',
         REQUEST_PASSWORD_RESET: '/api/auth/request-password-reset',
         RESET_PASSWORD: (token: string) => `/api/auth/reset-password/${token}`,
-        MFA_SETUP: "/auth/mfa/setup",
-        MFA_CONFIRM: "/auth/mfa/confirm",
-        MFA_VERIFY_LOGIN: "/auth/mfa/verify-login",
+        MFA_SETUP: "/api/auth/mfa/setup",
+        MFA_CONFIRM: "/api/auth/mfa/confirm",
+        MFA_VERIFY_LOGIN: "/api/auth/mfa/verify-login",
     },
     PRODUCT: {
         CREATE: '/api/products',

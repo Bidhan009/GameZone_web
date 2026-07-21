@@ -39,7 +39,17 @@ export const handleLogin = async (data: LoginData): Promise<ApiResponse> => {
         const response = (await login(data)) as ApiResponse;
 
         if (response.success) {
-            // Store session data in cookies
+            // NEW: if MFA is required, pass that through immediately —
+            // do NOT set auth cookies yet, since login isn't complete
+            if (response.mfaRequired) {
+                return {
+                    success: true,
+                    mfaRequired: true,
+                    mfaPendingToken: response.mfaPendingToken
+                };
+            }
+
+            // Normal login — store session data in cookies
             if (response.token) await setAuthToken(response.token);
             if (response.data) await setUserData(response.data);
 
@@ -56,8 +66,8 @@ export const handleLogin = async (data: LoginData): Promise<ApiResponse> => {
         };
     } catch (error: Error | any) {
         const errorMessage = error instanceof Error ? error.message : 'Login action failed';
-        return { 
-            success: false, 
+        return {
+            success: false,
             message: errorMessage
         };
     }

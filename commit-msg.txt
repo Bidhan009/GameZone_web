@@ -1,26 +1,30 @@
-[SEC-12] Fix: Insecure cookie attributes on auth_token and user_data
+Add CAPTCHA widget and full MFA UI flow
 
-Found that the cookies storing the JWT token and user data after
-login had no security attributes set at all. No httpOnly flag,
-meaning client side JavaScript could potentially read these cookies
-directly if any XSS vulnerability existed anywhere else in the app.
-No secure flag, no sameSite setting, and no explicit expiry, which
-meant the cookie was a session cookie that would outlive the actual
-JWT's real expiry time in some browser scenarios.
+Added the Google reCAPTCHA v2 checkbox widget to both the login and
+registration forms, wiring the resulting captcha token into the
+existing request bodies so the backends new captcha verification
+middleware can validate it.
 
-Confirmed this by checking DevTools Application tab after a normal
-login and seeing HttpOnly and SameSite both unset and Expires
-showing Session instead of a real timestamp.
+Added a full MFA settings section to the user profile page, letting
+a logged in user enable two factor authentication by requesting a
+QR code and manual entry key, scanning it with an authenticator
+app, and confirming setup with a current 6 digit code before it is
+actually marked as enabled.
 
-Fixed by explicitly setting httpOnly to true on both cookies so
-client side JavaScript can no longer read them at all, secure set
-to true only in production so it still works over plain http on
-localhost during development, sameSite set to lax as csrf defense
-in depth, and maxAge set to match the 1 hour JWT expiry from the
-SEC-07 fix, so the cookie and the token it holds now expire
-together consistently.
+Updated the login form to handle the new MFA required response from
+the backend. If an account has MFA enabled, submitting the correct
+password no longer logs the user in immediately, instead showing a
+dedicated 6 digit code entry screen. Only after submitting a valid
+current code from the authenticator app does login actually
+complete and redirect the user based on their role.
 
-Retested after the fix by logging out and back in, then checking
-DevTools again, and confirmed both cookies now show HttpOnly
-checked, SameSite set to Lax, and a real expiry timestamp
-approximately 1 hour out instead of Session.
+Fixed a bug in the login server action where the MFA required
+response fields were being silently dropped instead of passed
+through to the client, which was causing a misleading user data is
+missing error instead of showing the MFA code screen.
+
+Tested the complete flow end to end: registered a new account with
+captcha, enabled MFA from the profile page by scanning the QR code
+with an authenticator app, logged out, and confirmed logging back
+in now requires both the captcha and a valid MFA code before access
+is granted.
