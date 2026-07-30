@@ -7,12 +7,19 @@ export const loginSchema = z.object({
 
 export type LoginData = z.infer<typeof loginSchema>;
 
+const passwordSchema = z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
 export const registerSchema = z.object({
     fullName: z.string().min(2, { message: "Enter your name" }),
     email: z.email({ message: "Enter a valid email" }),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
-    password: z.string().min(6, { message: "Minimum 6 characters" }),
-    confirmPassword: z.string().min(6, { message: "Minimum 6 characters" }),
+    password: passwordSchema,
+    confirmPassword: z.string().min(8),
 }).refine((v) => v.password === v.confirmPassword, {
         path: ["confirmPassword"],
         message: "Passwords do not match",
