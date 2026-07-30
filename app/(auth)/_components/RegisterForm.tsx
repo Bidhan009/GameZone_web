@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { RegisterData, registerSchema } from "../schema";
 import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck, Phone } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -18,11 +19,14 @@ export default function RegisterForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     mode: "onSubmit",
   });
+
+  const passwordValue = useWatch({ control, name: "password" }) || "";
 
   const isLoading = isSubmitting || isPending;
 
@@ -136,6 +140,7 @@ export default function RegisterForm() {
             />
           </div>
           {errors.password && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.password.message}</p>}
+          <PasswordStrengthMeter password={passwordValue} />
         </div>
 
         {/* Confirm Password */}
