@@ -63,7 +63,7 @@ export default function Header() {
                   user?.profileImage
                     ? (user.profileImage.startsWith("http")
                         ? user.profileImage
-                        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${user.profileImage}`)
+                        : `http://localhost:5000${user.profileImage}`)
                     : "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
                 }
                 alt="avatar" 

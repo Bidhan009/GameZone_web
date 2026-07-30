@@ -191,7 +191,7 @@ export default function UpdateUserForm({
                             src={
                                 currentUser.profileImage.startsWith("http")
                                     ? currentUser.profileImage
-                                    : `${process.env.NEXT_PUBLIC_API_BASE_URL}${currentUser.profileImage}`
+                                    : `http://localhost:5000${currentUser.profileImage}`
                             }
                             alt="Profile Image"
                             width={100}
