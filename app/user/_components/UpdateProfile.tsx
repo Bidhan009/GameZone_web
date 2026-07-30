@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { handleUpdateProfile } from "@/lib/actions/auth-action";
 import { useAuth } from "@/app/context/AuthContext";
 import MfaSettings from "./MfaSettings";
+import { Download, Upload, Loader2 } from "lucide-react";
 
 import { z } from "zod";
 import { UpdateUserData, updateUserSchema } from "../schema";
@@ -55,6 +56,65 @@ export default function UpdateUserForm({
     };
 
     const { checkAuth, setUser } = useAuth();
+
+    const [isExporting, setIsExporting] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const importInputRef = useRef<HTMLInputElement>(null);
+
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const res = await fetch("http://localhost:5000/api/users/export", {
+                credentials: "include",
+            });
+            if (!res.ok) {
+                throw new Error("Failed to export account data");
+            }
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "account-data.json";
+            link.click();
+            window.URL.revokeObjectURL(url);
+            toast.success("Account data exported");
+        } catch (err: any) {
+            toast.error(err.message || "Failed to export account data");
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleImport = async (file: File | undefined) => {
+        if (!file) return;
+        setIsImporting(true);
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            const res = await fetch("http://localhost:5000/api/users/import", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(parsed),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || "Failed to import account data");
+            }
+            toast.success("Account data imported successfully");
+            if (data.data) {
+                setUser(data.data);
+            }
+            await checkAuth();
+        } catch (err: any) {
+            toast.error(err.message || "Failed to import account data");
+        } finally {
+            setIsImporting(false);
+            if (importInputRef.current) {
+                importInputRef.current.value = "";
+            }
+        }
+    };
 
     const onSubmit = async (data: UpdateUserData) => {
         setError(null);
@@ -203,6 +263,41 @@ export default function UpdateUserForm({
                     {isSubmitting ? 'Updating...' : 'Update Profile'}
                 </button>
             </form>
+
+            <div className="mt-8 border border-gray-300 rounded-lg p-4">
+                <h2 className="text-lg font-bold mb-1">Your Data</h2>
+                <p className="text-sm text-gray-500 mb-3">
+                    Download a copy of your account data, or import a previously exported file.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        Export Data
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => importInputRef.current?.click()}
+                        disabled={isImporting}
+                        className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        Import Data
+                    </button>
+                    <input
+                        ref={importInputRef}
+                        type="file"
+                        accept="application/json"
+                        onChange={(e) => handleImport(e.target.files?.[0])}
+                        className="hidden"
+                    />
+                </div>
+            </div>
+
             <MfaSettings user={currentUser} />
         </div>
     );
