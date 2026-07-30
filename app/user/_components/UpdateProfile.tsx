@@ -16,8 +16,10 @@ export default function UpdateUserForm({
     user
 }: { user: any }) {
     const { user: authUser } = useAuth();
-    // prefer the client-updated user from context, fall back to the server-provided prop
-    const currentUser = authUser || user;
+    // Prefer the server-fetched prop: it comes from whoAmI/getProfile, which decrypts
+    // phone server-side. The cached auth context can still hold the raw encrypted phone
+    // from login (login doesn't decrypt it), so it's only a fallback here.
+    const currentUser = user || authUser;
 
     const { register, handleSubmit, control, formState: { errors, isSubmitting } } =
         useForm<UpdateUserData>({
