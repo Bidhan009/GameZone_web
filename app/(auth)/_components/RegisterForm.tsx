@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RegisterData, registerSchema } from "../schema";
-import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck, Phone } from "lucide-react";
+import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck, Phone, ImagePlus } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
 import PasswordStrengthMeter from "./PasswordStrengthMeter";
 
@@ -15,6 +15,7 @@ export default function RegisterForm() {
   const [isPending, startTransition] = useTransition();
   const [captchaValue, setCaptchaValue] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
 
   const {
     register,
@@ -39,11 +40,22 @@ export default function RegisterForm() {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("fullName", values.fullName);
+      formData.append("email", values.email);
+      formData.append("phone", values.phone);
+      formData.append("password", values.password);
+      formData.append("confirmPassword", values.confirmPassword);
+      formData.append("captchaToken", captchaValue);
+      if (profileImage) {
+        // multer on backend expects the field name 'profileImage'
+        formData.append("profileImage", profileImage);
+      }
+
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ ...values, captchaToken: captchaValue }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -124,6 +136,21 @@ export default function RegisterForm() {
             />
           </div>
           {errors.phone && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.phone.message}</p>}
+        </div>
+
+        {/* Profile Image (optional) */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase text-gray-500 ml-1" htmlFor="profileImage">Profile Image (optional)</label>
+          <div className="relative group">
+            <ImagePlus className="absolute left-3 top-3 w-5 h-5 text-gray-500 group-focus-within:text-purple-500 transition-colors" />
+            <input
+              id="profileImage"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setProfileImage(e.target.files?.[0] ?? null)}
+              className="w-full bg-[#0f1218] border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:text-xs file:font-bold hover:file:bg-purple-700 focus:outline-none focus:border-purple-500 transition-all"
+            />
+          </div>
         </div>
 
         {/* Password */}
