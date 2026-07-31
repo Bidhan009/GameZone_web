@@ -72,6 +72,11 @@ export default function MfaSettings({ user }: { user: any }) {
                             <ShieldOff className="w-5 h-5 text-gray-400" />
                         )}
                         Two-Factor Authentication
+                        {mfaEnabled && (
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-600/20 text-green-500 border border-green-600/40">
+                                MFA enabled
+                            </span>
+                        )}
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">
                         {mfaEnabled
