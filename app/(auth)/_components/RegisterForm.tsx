@@ -1,54 +1,78 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RegisterData, registerSchema } from "../schema";
-import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck, Phone } from "lucide-react";
+import { Mail, Lock, User, Loader2, AlertCircle, ShieldCheck, Phone, ImagePlus } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
 
 export default function RegisterForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     mode: "onSubmit",
   });
 
+  const passwordValue = useWatch({ control, name: "password" }) || "";
+
   const isLoading = isSubmitting || isPending;
 
   const onSubmit = async (values: RegisterData) => {
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // 🔑 allow sending cookies
-      body: JSON.stringify(values),
-    });
+    setServerError(null);
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Registration failed:", data.message);
-      alert(data.message || "Registration failed");
+    if (!captchaValue) {
+      setServerError("Please complete the CAPTCHA verification.");
       return;
     }
 
-    console.log("User created in MongoDB:", data);
-    router.push("/login");
-  } catch (error) {
-    console.error("Registration error:", error);
-    alert("Server error. Check backend console.");
-  }
-};
+    try {
+      const formData = new FormData();
+      formData.append("fullName", values.fullName);
+      formData.append("email", values.email);
+      formData.append("phone", values.phone);
+      formData.append("password", values.password);
+      formData.append("confirmPassword", values.confirmPassword);
+      formData.append("captchaToken", captchaValue);
+      if (profileImage) {
+        // multer on backend expects the field name 'profileImage'
+        formData.append("profileImage", profileImage);
+      }
 
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
 
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Registration failed:", data.message);
+        setServerError(data.message || "Registration failed");
+        return;
+      }
+
+      console.log("User created in MongoDB:", data);
+      router.push("/login");
+    } catch (error) {
+      console.error("Registration error:", error);
+      setServerError("Server error. Check backend console.");
+    }
+  };
 
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-[#1a1f29] border border-gray-800 rounded-2xl shadow-2xl backdrop-blur-sm">
@@ -60,6 +84,13 @@ export default function RegisterForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {serverError && (
+          <div className="bg-red-500/10 border border-red-500/50 p-3 rounded-lg flex items-center gap-2 text-red-500 text-xs">
+            <AlertCircle className="w-4 h-4" />
+            {serverError}
+          </div>
+        )}
+
         {/* Full Name */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold uppercase text-gray-500 ml-1" htmlFor="name">Full Name</label>
@@ -91,7 +122,7 @@ export default function RegisterForm() {
           {errors.email && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.email.message}</p>}
         </div>
 
-        {/* Phone Number (NEW) */}
+        {/* Phone Number */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold uppercase text-gray-500 ml-1" htmlFor="phone">Phone Number</label>
           <div className="relative group">
@@ -105,6 +136,21 @@ export default function RegisterForm() {
             />
           </div>
           {errors.phone && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.phone.message}</p>}
+        </div>
+
+        {/* Profile Image (optional) */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase text-gray-500 ml-1" htmlFor="profileImage">Profile Image (optional)</label>
+          <div className="relative group">
+            <ImagePlus className="absolute left-3 top-3 w-5 h-5 text-gray-500 group-focus-within:text-purple-500 transition-colors" />
+            <input
+              id="profileImage"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setProfileImage(e.target.files?.[0] ?? null)}
+              className="w-full bg-[#0f1218] border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:text-xs file:font-bold hover:file:bg-purple-700 focus:outline-none focus:border-purple-500 transition-all"
+            />
+          </div>
         </div>
 
         {/* Password */}
@@ -121,6 +167,7 @@ export default function RegisterForm() {
             />
           </div>
           {errors.password && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.password.message}</p>}
+          <PasswordStrengthMeter password={passwordValue} />
         </div>
 
         {/* Confirm Password */}
@@ -137,6 +184,14 @@ export default function RegisterForm() {
             />
           </div>
           {errors.confirmPassword && <p className="text-xs text-red-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> {errors.confirmPassword.message}</p>}
+        </div>
+
+        <div className="flex justify-center">
+          <ReCAPTCHA
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+            onChange={(value) => setCaptchaValue(value)}
+            theme="dark"
+          />
         </div>
 
         <button

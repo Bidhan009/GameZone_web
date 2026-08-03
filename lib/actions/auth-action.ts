@@ -1,19 +1,12 @@
 "use server";
 
-import { login, register } from "@/lib/api/auth";
+import { login, register, updateProfile, whoAmI, resetPassword, requestPasswordReset, setupMfa, confirmMfa, verifyMfaLogin } from "@/lib/api/auth";
+import type { ApiResponse } from "@/lib/api/auth";
 import { LoginData, RegisterData } from "@/app/(auth)/schema";
 import { setAuthToken, setUserData, clearAuthCookies } from "../cookie";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
-/** * Interface for the Backend API Response.
- * This ensures TypeScript knows what 'response.success' and 'response.data' are.
- */
-interface ApiResponse<T = any> {
-    success: boolean;
-    message?: string;
-    token?: string;
-    data?: T;
-}
 
 export const handleRegister = async (data: RegisterData): Promise<ApiResponse> => {
     try {
@@ -32,10 +25,11 @@ export const handleRegister = async (data: RegisterData): Promise<ApiResponse> =
             success: false,
             message: response.message || 'Registration failed'
         };
-    } catch (error: any) {
+    } catch (error: Error | any) {
+        const errorMessage = error instanceof Error ? error.message : 'Registration action failed';
         return { 
             success: false, 
-            message: error.message || 'Registration action failed' 
+            message: errorMessage
         };
     }
 };
@@ -45,7 +39,17 @@ export const handleLogin = async (data: LoginData): Promise<ApiResponse> => {
         const response = (await login(data)) as ApiResponse;
 
         if (response.success) {
-            // Store session data in cookies
+            // NEW: if MFA is required, pass that through immediately —
+            // do NOT set auth cookies yet, since login isn't complete
+            if (response.mfaRequired) {
+                return {
+                    success: true,
+                    mfaRequired: true,
+                    mfaPendingToken: response.mfaPendingToken
+                };
+            }
+
+            // Normal login — store session data in cookies
             if (response.token) await setAuthToken(response.token);
             if (response.data) await setUserData(response.data);
 
@@ -60,10 +64,11 @@ export const handleLogin = async (data: LoginData): Promise<ApiResponse> => {
             success: false,
             message: response.message || 'Login failed'
         };
-    } catch (error: any) {
-        return { 
-            success: false, 
-            message: error.message || 'Login action failed' 
+    } catch (error: Error | any) {
+        const errorMessage = error instanceof Error ? error.message : 'Login action failed';
+        return {
+            success: false,
+            message: errorMessage
         };
     }
 };
@@ -71,4 +76,102 @@ export const handleLogin = async (data: LoginData): Promise<ApiResponse> => {
 export const handleLogout = async () => {
     await clearAuthCookies();
     return redirect('/login');
+};
+
+export async function handleWhoAmI() {
+    try {
+        const result = await whoAmI();
+        if (result.success) {
+            return {
+                success: true,
+                message: 'User data fetched successfully',
+                data: result.data
+            };
+        }
+        return { success: false, message: result.message || 'Failed to fetch user data' };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+}
+
+export async function handleUpdateProfile(profileData: FormData) {
+    try {
+        const result = await updateProfile(profileData);
+        if (result.success && result.data) {
+            await setUserData(result.data); // update cookie 
+            revalidatePath('/user/profile'); // revalidate profile image/ refresh new data
+            return {
+                success: true,
+                message: 'Profile updated successfully',
+                data: result.data
+            };
+        }
+        return { success: false, message: result.message || 'Failed to update profile' };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+}
+
+export async function handleRequestPasswordReset (email: string){
+    try {
+        const result = await requestPasswordReset(email);
+        if (result.success) {
+            return {
+                success: true,
+                message: 'Password reset email sent successfully'
+            }
+        }
+        return { success: false, message: result.message || 'Request password reset failed' }
+    } catch (error: Error | any) {
+        return { success: false, message: error.message || 'Request password reset action failed' }
+    }
+};
+
+export async function handleResetPassword (token: string, newPassword: string) {
+    try {
+        const result = await resetPassword(token, newPassword);
+        if (result.success) {
+            return {
+                success: true,
+                message: 'Password has been reset successfully'
+            }
+        }
+        return { success: false, message: result.message || 'Reset password failed' }
+    } catch (error: Error | any) {
+        return { success: false, message: error.message || 'Reset password action failed' }
+    }
+};
+
+export const handleSetupMfa = async () => {
+    try {
+        const result = await setupMfa();
+        if (result.success) {
+            return { success: true, data: result.data };
+        }
+        return { success: false, message: result.message || 'MFA setup failed' };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+};
+
+export const handleConfirmMfa = async (mfaToken: string) => {
+    try {
+        const result = await confirmMfa(mfaToken);
+        return { success: result.success, message: result.message };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+};
+
+export const handleVerifyMfaLogin = async (mfaPendingToken: string, mfaCode: string): Promise<ApiResponse> => {
+    try {
+        const response = await verifyMfaLogin(mfaPendingToken, mfaCode);
+        if (response.success && !response.mfaRequired) {
+            if (response.token) await setAuthToken(response.token);
+            if (response.data) await setUserData(response.data);
+        }
+        return response;
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
 };
