@@ -1,22 +1,139 @@
-import { LoginData, RegisterData } from "@/app/(auth)/schema"
-import axios from "./axios"
-import { API } from "./endpoints"
+import { LoginData, RegisterData } from "@/app/(auth)/schema";
+import { UserData, getAuthToken } from "@/lib/cookie";
+import axios from "./axios";
+import { API } from "./endpoints";
 
+export interface ApiResponse<T = UserData> {
+    success: boolean;
+    message?: string;
+    token?: string;
+    data?: T;
+    mfaRequired?: boolean;    
+    mfaPendingToken?: string;
+}
 
-export const register = async (registerData: RegisterData) => {
+export const register = async (registerData: RegisterData): Promise<ApiResponse> => {
     try {
         const response = await axios.post(API.AUTH.REGISTER, registerData)
-        return response.data
+        return response.data as ApiResponse
     } catch (error: Error | any) {
-        throw new Error(error.response?.data?.message || error.message || 'Registration failed')
+        const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        throw new Error(axiosError.response?.data?.message || errorMessage)
     }
 }
 
-export const login = async (loginData: LoginData) => {
+export const login = async (loginData: LoginData): Promise<ApiResponse> => {
     try {
         const response = await axios.post(API.AUTH.LOGIN, loginData)
-        return response.data
+        return response.data as ApiResponse
     } catch (error: Error | any) {
-        throw new Error(error.response?.data?.message || error.message || 'Login failed')
+        const errorMessage = error instanceof Error ? error.message : 'Login failed';
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        throw new Error(axiosError.response?.data?.message || errorMessage)
     }
 }
+
+export const whoAmI = async (): Promise<ApiResponse> => {
+    try {
+        // Use server-side auth token for this server-side call
+        const token = await getAuthToken();
+        const response = await axios.get(API.AUTH.WHOAMI, {
+            headers: token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                }
+                : undefined,
+        });
+        return response.data as ApiResponse;
+    }catch (error:Error | any){
+        throw new Error(error.response?.data?.message
+            || error.message || 'Whoami failed'
+        );
+    }
+}
+
+export const updateProfile = async (profileData: FormData): Promise<ApiResponse> => {
+    try{
+        const token = await getAuthToken();
+        const response = await axios.put(
+            API.AUTH.UPDATEPROFILE,
+            profileData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',// for file upload /multer
+                    ...(token
+                        ? {
+                            Authorization: `Bearer ${token}`,
+                          }
+                        : {}),
+                },
+            }
+        );
+        return response.data as ApiResponse;
+    }catch (error: Error| any){
+        throw new Error(error.response?.data?.message
+      || error.message || 'Update profile failed');
+
+    }
+}
+
+export const requestPasswordReset = async (email: string) : Promise<ApiResponse> => {
+    try {
+        const response = await axios.post(API.AUTH.REQUEST_PASSWORD_RESET, { email });
+        return response.data as ApiResponse;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'Request password reset failed');
+    }
+};
+
+export const resetPassword = async (token: string, newPassword: string) : Promise<ApiResponse> => {
+    try {
+        const response = await axios.post(API.AUTH.RESET_PASSWORD(token), { newPassword: newPassword });
+        return response.data as ApiResponse;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'Reset password failed');
+    }
+}
+
+export const logout = async (): Promise<ApiResponse> => {
+    try {
+        const response = await axios.post(API.AUTH.LOGOUT);
+        return response.data as ApiResponse;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'Logout failed');
+    }
+}
+
+export const setupMfa = async (): Promise<ApiResponse<{ qrCodeDataUrl: string; manualEntryKey: string }>> => {
+    try {
+        const token = await getAuthToken();
+        const response = await axios.post(API.AUTH.MFA_SETUP, {}, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'MFA setup failed');
+    }
+};
+
+export const confirmMfa = async (mfaToken: string): Promise<ApiResponse> => {
+    try {
+        const token = await getAuthToken();
+        const response = await axios.post(API.AUTH.MFA_CONFIRM, { token: mfaToken }, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'MFA confirmation failed');
+    }
+};
+
+export const verifyMfaLogin = async (mfaPendingToken: string, mfaCode: string): Promise<ApiResponse> => {
+    try {
+        const response = await axios.post(API.AUTH.MFA_VERIFY_LOGIN, { mfaPendingToken, mfaCode });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message || error.message || 'MFA verification failed');
+    }
+};

@@ -1,0 +1,30 @@
+Add CAPTCHA widget and full MFA UI flow
+
+Added the Google reCAPTCHA v2 checkbox widget to both the login and
+registration forms, wiring the resulting captcha token into the
+existing request bodies so the backends new captcha verification
+middleware can validate it.
+
+Added a full MFA settings section to the user profile page, letting
+a logged in user enable two factor authentication by requesting a
+QR code and manual entry key, scanning it with an authenticator
+app, and confirming setup with a current 6 digit code before it is
+actually marked as enabled.
+
+Updated the login form to handle the new MFA required response from
+the backend. If an account has MFA enabled, submitting the correct
+password no longer logs the user in immediately, instead showing a
+dedicated 6 digit code entry screen. Only after submitting a valid
+current code from the authenticator app does login actually
+complete and redirect the user based on their role.
+
+Fixed a bug in the login server action where the MFA required
+response fields were being silently dropped instead of passed
+through to the client, which was causing a misleading user data is
+missing error instead of showing the MFA code screen.
+
+Tested the complete flow end to end: registered a new account with
+captcha, enabled MFA from the profile page by scanning the QR code
+with an authenticator app, logged out, and confirmed logging back
+in now requires both the captcha and a valid MFA code before access
+is granted.
